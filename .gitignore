@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+tsui
+/cmd/tsui/tsui
+*.exe
+*.dll
+*.so
+*.dylib
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Docker data volumes
+data/
+
+# Tailwind output (regenerated during build)
+web/static/css/app.css
