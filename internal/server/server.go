@@ -145,6 +145,10 @@ func (s *Server) routes(staticFS fs.FS) {
 
 	// Continuous Aggregates
 	s.mux.Handle("GET /continuous-aggregates", requireAuth(http.HandlerFunc(caH.List)))
+	s.mux.Handle("GET /continuous-aggregates/create", requireAuth(http.HandlerFunc(caH.CreateForm)))
+	s.mux.Handle("GET /continuous-aggregates/builder/columns", requireAuth(http.HandlerFunc(caH.BuilderColumns)))
+	s.mux.Handle("POST /continuous-aggregates/builder/preview", requireAuth(http.HandlerFunc(caH.BuilderPreview)))
+	s.mux.Handle("POST /continuous-aggregates/builder/explain", requireAuth(http.HandlerFunc(caH.BuilderExplain)))
 	s.mux.Handle("GET /continuous-aggregates/{schema}/{name}", requireAuth(http.HandlerFunc(caH.Detail)))
 	s.mux.Handle("POST /continuous-aggregates/create", requireAuth(http.HandlerFunc(caH.Create)))
 	s.mux.Handle("POST /continuous-aggregates/refresh", requireAuth(http.HandlerFunc(caH.Refresh)))
@@ -171,6 +175,7 @@ func (s *Server) routes(staticFS fs.FS) {
 	// SQL Runner
 	s.mux.Handle("GET /query", requireAuth(http.HandlerFunc(queryH.Page)))
 	s.mux.Handle("POST /query/execute", requireAuth(http.HandlerFunc(queryH.Execute)))
+	s.mux.Handle("POST /query/analyze", requireAuth(http.HandlerFunc(queryH.Analyze)))
 
 	// Jobs
 	s.mux.Handle("GET /jobs", requireAuth(http.HandlerFunc(jobH.List)))

@@ -1,0 +1,30 @@
+{{define "partials/explain_result.html"}}
+{{if .Error}}
+<div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/30">
+    <p class="text-sm font-medium text-red-800 dark:text-red-400">Error</p>
+    <pre class="mt-1 text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono">{{.Error}}</pre>
+</div>
+{{else}}
+<div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex flex-wrap items-center gap-4">
+        {{if .ExecTime}}
+        <div class="flex items-center gap-1.5">
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Execution:</span>
+            <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">{{.ExecTime}}</span>
+        </div>
+        {{end}}
+        {{if .PlanningTime}}
+        <div class="flex items-center gap-1.5">
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Planning:</span>
+            <span class="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">{{.PlanningTime}}</span>
+        </div>
+        {{end}}
+        <div class="flex items-center gap-1.5">
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Total:</span>
+            <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{.Duration}}</span>
+        </div>
+    </div>
+    <pre class="overflow-auto p-4 text-xs font-mono text-gray-800 dark:text-gray-300 leading-relaxed">{{.Plan}}</pre>
+</div>
+{{end}}
+{{end}}

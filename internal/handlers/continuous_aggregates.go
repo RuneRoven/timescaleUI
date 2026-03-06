@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/RuneRoven/timescaleUI/internal/db"
 	"github.com/RuneRoven/timescaleUI/internal/middleware"
@@ -218,4 +219,119 @@ func (h *CAHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/continuous-aggregates", http.StatusSeeOther)
+}
+
+func (h *CAHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	hypertables, err := db.ListHypertables(r.Context(), pool)
+	if err != nil {
+		h.logger.Error("list hypertables for CA builder", "error", err)
+	}
+
+	data := map[string]any{"Hypertables": hypertables}
+
+	if templates.IsHTMX(r) {
+		h.renderer.Partial(w, http.StatusOK, "pages/ca_create.html", data)
+		return
+	}
+	h.renderer.Page(w, http.StatusOK, "pages/ca_create.html", templates.PageData{
+		Title:     "Create Continuous Aggregate",
+		User:      middleware.UserFromContext(r.Context()),
+		Active:    "Continuous Aggregates",
+		CSRFToken: csrfFromContext(r),
+		Content:   data,
+	})
+}
+
+func (h *CAHandler) BuilderColumns(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	tableFull := r.URL.Query().Get("table_full")
+	parts := strings.SplitN(tableFull, ".", 2)
+	if len(parts) != 2 {
+		http.Error(w, "Invalid table", http.StatusBadRequest)
+		return
+	}
+	schema, table := parts[0], parts[1]
+
+	cols, err := db.ListTableColumns(r.Context(), pool, schema, table)
+	if err != nil {
+		h.logger.Error("builder columns", "error", err)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	data := map[string]any{
+		"Schema":  schema,
+		"Table":   table,
+		"Columns": cols,
+	}
+	h.renderer.Partial(w, http.StatusOK, "partials/ca_builder_columns.html", data)
+}
+
+func (h *CAHandler) BuilderPreview(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	schema := r.FormValue("schema")
+	table := r.FormValue("table")
+	timeCol := r.FormValue("time_column")
+	bucket := r.FormValue("bucket")
+
+	aggCols := r.Form["agg_col[]"]
+	aggFuncs := r.Form["agg_func[]"]
+	aggAliases := r.Form["agg_alias[]"]
+
+	var aggs []db.AggregateSpec
+	for i := range aggCols {
+		if i >= len(aggFuncs) || i >= len(aggAliases) {
+			break
+		}
+		if aggCols[i] == "" || aggFuncs[i] == "" || aggAliases[i] == "" {
+			continue
+		}
+		aggs = append(aggs, db.AggregateSpec{
+			Column: aggCols[i],
+			Func:   aggFuncs[i],
+			Alias:  aggAliases[i],
+		})
+	}
+
+	query, err := db.BuildCAQuery(schema, table, timeCol, bucket, aggs)
+	if err != nil {
+		h.renderer.Partial(w, http.StatusOK, "partials/ca_builder_preview.html", map[string]any{
+			"Error":    err.Error(),
+			"Schema":   schema,
+			"Table":    table,
+			"TimeCol":  timeCol,
+			"Bucket":   bucket,
+		})
+		return
+	}
+
+	h.renderer.Partial(w, http.StatusOK, "partials/ca_builder_preview.html", map[string]any{
+		"Query":   query,
+		"Schema":  schema,
+		"Table":   table,
+		"TimeCol": timeCol,
+		"Bucket":  bucket,
+	})
+}
+
+func (h *CAHandler) BuilderExplain(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	sql := r.FormValue("query")
+	if sql == "" {
+		h.renderer.Partial(w, http.StatusOK, "partials/explain_result.html", &db.ExplainResult{Error: "No SQL provided"})
+		return
+	}
+
+	result := db.ExplainQuery(r.Context(), pool, sql)
+	h.renderer.Partial(w, http.StatusOK, "partials/explain_result.html", result)
 }

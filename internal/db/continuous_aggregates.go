@@ -3,9 +3,70 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// AggregateSpec describes a single aggregate column in a CA query.
+type AggregateSpec struct {
+	Column string
+	Func   string
+	Alias  string
+}
+
+// BuildCAQuery generates a continuous aggregate SELECT query from parts.
+func BuildCAQuery(schema, table, timeCol, bucket string, aggs []AggregateSpec) (string, error) {
+	if err := ValidateIdentifier(schema); err != nil {
+		return "", fmt.Errorf("invalid schema: %w", err)
+	}
+	if err := ValidateIdentifier(table); err != nil {
+		return "", fmt.Errorf("invalid table: %w", err)
+	}
+	if err := ValidateIdentifier(timeCol); err != nil {
+		return "", fmt.Errorf("invalid time column: %w", err)
+	}
+
+	// Validate bucket interval: only allow alphanumeric, spaces, and common interval chars
+	for _, c := range bucket {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == ' ' || c == '.') {
+			return "", fmt.Errorf("invalid bucket interval character: %c", c)
+		}
+	}
+
+	allowedFuncs := map[string]bool{
+		"avg": true, "sum": true, "min": true, "max": true,
+		"count": true, "last": true, "first": true,
+	}
+
+	var aggParts []string
+	for _, a := range aggs {
+		if err := ValidateIdentifier(a.Column); err != nil {
+			return "", fmt.Errorf("invalid aggregate column: %w", err)
+		}
+		if err := ValidateIdentifier(a.Alias); err != nil {
+			return "", fmt.Errorf("invalid alias: %w", err)
+		}
+		funcLower := strings.ToLower(a.Func)
+		if !allowedFuncs[funcLower] {
+			return "", fmt.Errorf("unsupported aggregate function: %s", a.Func)
+		}
+
+		if funcLower == "last" || funcLower == "first" {
+			aggParts = append(aggParts, fmt.Sprintf("%s(%s, %s) AS %s", funcLower, a.Column, timeCol, a.Alias))
+		} else {
+			aggParts = append(aggParts, fmt.Sprintf("%s(%s) AS %s", funcLower, a.Column, a.Alias))
+		}
+	}
+
+	query := fmt.Sprintf("SELECT time_bucket('%s', %s) AS bucket", bucket, timeCol)
+	if len(aggParts) > 0 {
+		query += ",\n    " + strings.Join(aggParts, ",\n    ")
+	}
+	query += fmt.Sprintf("\nFROM %s.%s\nGROUP BY bucket", schema, table)
+
+	return query, nil
+}
 
 // ContinuousAggregate represents a continuous aggregate.
 type ContinuousAggregate struct {

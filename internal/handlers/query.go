@@ -56,3 +56,22 @@ func (h *QueryHandler) Execute(w http.ResponseWriter, r *http.Request) {
 
 	h.renderer.Partial(w, http.StatusOK, "partials/query_result.html", result)
 }
+
+func (h *QueryHandler) Analyze(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	sql := r.FormValue("sql")
+	if sql == "" {
+		h.renderer.Partial(w, http.StatusOK, "partials/explain_result.html", &db.ExplainResult{Error: "No SQL provided"})
+		return
+	}
+
+	h.logger.Info("explain analyze", "user", middleware.UserFromContext(r.Context()))
+	result := db.ExplainQuery(r.Context(), pool, sql)
+
+	h.renderer.Partial(w, http.StatusOK, "partials/explain_result.html", result)
+}

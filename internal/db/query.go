@@ -3,10 +3,72 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// ExplainResult holds the output of an EXPLAIN ANALYZE query.
+type ExplainResult struct {
+	Plan         string
+	PlanningTime string
+	ExecTime     string
+	Duration     time.Duration
+	Error        string
+}
+
+// ExplainQuery runs EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) on a SQL query
+// inside a rolled-back transaction so it never mutates data.
+func ExplainQuery(ctx context.Context, pool *pgxpool.Pool, sql string) *ExplainResult {
+	start := time.Now()
+	result := &ExplainResult{}
+
+	queryCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	tx, err := pool.Begin(queryCtx)
+	if err != nil {
+		result.Error = fmt.Sprintf("begin transaction: %v", err)
+		result.Duration = time.Since(start)
+		return result
+	}
+	defer tx.Rollback(queryCtx)
+
+	rows, err := tx.Query(queryCtx, "EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) "+sql)
+	if err != nil {
+		result.Error = err.Error()
+		result.Duration = time.Since(start)
+		return result
+	}
+	defer rows.Close()
+
+	var lines []string
+	for rows.Next() {
+		var line string
+		if err := rows.Scan(&line); err != nil {
+			result.Error = fmt.Sprintf("scan explain: %v", err)
+			result.Duration = time.Since(start)
+			return result
+		}
+		lines = append(lines, line)
+
+		// Extract timing from plan text
+		if strings.HasPrefix(line, "Planning Time:") {
+			result.PlanningTime = strings.TrimSpace(strings.TrimPrefix(line, "Planning Time:"))
+		} else if strings.HasPrefix(line, "Execution Time:") {
+			result.ExecTime = strings.TrimSpace(strings.TrimPrefix(line, "Execution Time:"))
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		result.Error = err.Error()
+	}
+
+	result.Plan = strings.Join(lines, "\n")
+	result.Duration = time.Since(start)
+	return result
+}
 
 // QueryResult holds the results of a SQL query.
 type QueryResult struct {
