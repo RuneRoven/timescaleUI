@@ -71,7 +71,7 @@
                     {{range .Content.Views}}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{.Schema}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Name}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium"><a href="/functions/view/{{.Schema}}/{{.Name}}{{if .IsMatView}}?materialized=true{{end}}" class="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300">{{.Name}}</a></td>
                         <td class="whitespace-nowrap px-4 py-2.5 text-sm">
                             {{if .IsMatView}}<span class="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">Materialized</span>
                             {{else}}<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">View</span>{{end}}

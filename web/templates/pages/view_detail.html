@@ -1,0 +1,82 @@
+{{define "pages/view_detail.html"}}
+<div>
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/functions" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{.Content.View.Schema}}.{{.Content.View.Name}}</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                {{if .Content.View.IsMatView}}<span class="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">Materialized View</span>
+                {{else}}<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">View</span>{{end}}
+                {{if .Content.View.Size}}<span class="ml-2 text-gray-500 dark:text-gray-400">Size: {{.Content.View.Size}}</span>{{end}}
+            </p>
+        </div>
+    </div>
+
+    <!-- Definition -->
+    <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+        <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">SQL Definition</h2>
+        <pre class="overflow-auto rounded-lg bg-gray-50 p-4 text-sm font-mono text-gray-800 dark:bg-gray-900 dark:text-gray-300 max-h-96">{{.Content.View.Definition}}</pre>
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            {{if .Content.View.IsMatView}}<p class="text-xs text-amber-600 dark:text-amber-400 mb-3">Editing a materialized view will drop and recreate it. Data will be repopulated.</p>{{end}}
+            <button onclick="document.getElementById('edit-view-modal').classList.remove('hidden')"
+                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Edit Definition</button>
+        </div>
+    </div>
+
+    <!-- Edit Definition Modal -->
+    <div id="edit-view-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
+            <h2 class="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">Edit View Definition</h2>
+            {{if .Content.View.IsMatView}}<p class="text-sm text-amber-600 dark:text-amber-400 mb-4">This will drop and recreate the materialized view with new data.</p>{{end}}
+            <form method="POST" action="/functions/update-view-definition" class="space-y-4"
+                  {{if .Content.View.IsMatView}}onsubmit="return confirm('This will drop and recreate the materialized view. Continue?')"{{end}}>
+                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="schema" value="{{.Content.View.Schema}}">
+                <input type="hidden" name="name" value="{{.Content.View.Name}}">
+                <input type="hidden" name="materialized" value="{{if .Content.View.IsMatView}}true{{else}}false{{end}}">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Query</label>
+                    <textarea name="query" rows="12" required
+                              class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{.Content.View.Definition}}</textarea>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="document.getElementById('edit-view-modal').classList.add('hidden')"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                    <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dependencies -->
+    {{if .Content.View.Dependencies}}
+    <div class="mt-6 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+        <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Dependencies</h2>
+        <ul class="space-y-1">
+            {{range .Content.View.Dependencies}}
+            <li class="text-sm text-gray-600 dark:text-gray-400">{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+
+    <!-- Actions -->
+    <div class="mt-6 flex gap-2">
+        {{if .Content.View.IsMatView}}
+        <form method="POST" action="/functions/refresh-matview">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="name" value="{{.Content.View.Schema}}.{{.Content.View.Name}}">
+            <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500">Refresh</button>
+        </form>
+        {{end}}
+        <form method="POST" action="/functions/drop-view" onsubmit="return confirm('Drop {{if .Content.View.IsMatView}}materialized view{{else}}view{{end}} {{.Content.View.Schema}}.{{.Content.View.Name}}?')">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="name" value="{{.Content.View.Schema}}.{{.Content.View.Name}}">
+            <input type="hidden" name="materialized" value="{{if .Content.View.IsMatView}}true{{else}}false{{end}}">
+            <button type="submit" class="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:bg-gray-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-gray-600">Drop</button>
+        </form>
+    </div>
+</div>
+{{end}}

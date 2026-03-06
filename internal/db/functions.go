@@ -116,6 +116,108 @@ func DropView(ctx context.Context, pool *pgxpool.Pool, name string, materialized
 	return nil
 }
 
+// ViewDetail holds detailed info for a single view.
+type ViewDetail struct {
+	Schema       string
+	Name         string
+	Definition   string
+	IsMatView    bool
+	Size         string
+	Dependencies []string
+}
+
+// GetViewDetail returns detailed info about a specific view.
+func GetViewDetail(ctx context.Context, pool *pgxpool.Pool, schema, name string, materialized bool) (*ViewDetail, error) {
+	if err := ValidateIdentifier(schema); err != nil {
+		return nil, err
+	}
+	if err := ValidateIdentifier(name); err != nil {
+		return nil, err
+	}
+
+	d := &ViewDetail{Schema: schema, Name: name, IsMatView: materialized}
+
+	if materialized {
+		err := pool.QueryRow(ctx, `
+			SELECT definition FROM pg_matviews
+			WHERE schemaname = $1 AND matviewname = $2`,
+			schema, name).Scan(&d.Definition)
+		if err != nil {
+			return nil, fmt.Errorf("get mat view detail: %w", err)
+		}
+		// Size for materialized views
+		var size *string
+		err = pool.QueryRow(ctx, `
+			SELECT pg_size_pretty(pg_total_relation_size(format('%I.%I', $1, $2)::regclass))`,
+			schema, name).Scan(&size)
+		if err == nil && size != nil {
+			d.Size = *size
+		}
+	} else {
+		err := pool.QueryRow(ctx, `
+			SELECT definition FROM pg_views
+			WHERE schemaname = $1 AND viewname = $2`,
+			schema, name).Scan(&d.Definition)
+		if err != nil {
+			return nil, fmt.Errorf("get view detail: %w", err)
+		}
+	}
+
+	// Dependencies
+	depRows, err := pool.Query(ctx, `
+		SELECT DISTINCT dep_cl.relname
+		FROM pg_depend d
+		JOIN pg_rewrite rw ON d.objid = rw.oid
+		JOIN pg_class cl ON rw.ev_class = cl.oid
+		JOIN pg_namespace ns ON cl.relnamespace = ns.oid
+		JOIN pg_class dep_cl ON d.refobjid = dep_cl.oid
+		WHERE ns.nspname = $1 AND cl.relname = $2
+		  AND dep_cl.relname != $2
+		  AND d.deptype = 'n'
+		ORDER BY dep_cl.relname`, schema, name)
+	if err == nil {
+		defer depRows.Close()
+		for depRows.Next() {
+			var dep string
+			if err := depRows.Scan(&dep); err == nil {
+				d.Dependencies = append(d.Dependencies, dep)
+			}
+		}
+	}
+
+	return d, nil
+}
+
+// UpdateViewDefinition replaces a view's SQL definition.
+// Regular views use CREATE OR REPLACE. Materialized views require drop + recreate.
+func UpdateViewDefinition(ctx context.Context, pool *pgxpool.Pool, schema, name, query string, materialized bool) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(name); err != nil {
+		return err
+	}
+
+	qualifiedName := fmt.Sprintf("%s.%s", schema, name)
+
+	if materialized {
+		dropSQL := fmt.Sprintf("DROP MATERIALIZED VIEW IF EXISTS %s CASCADE", qualifiedName)
+		if _, err := pool.Exec(ctx, dropSQL); err != nil {
+			return fmt.Errorf("drop materialized view: %w", err)
+		}
+		createSQL := fmt.Sprintf("CREATE MATERIALIZED VIEW %s AS %s WITH DATA", qualifiedName, query)
+		if _, err := pool.Exec(ctx, createSQL); err != nil {
+			return fmt.Errorf("recreate materialized view: %w", err)
+		}
+	} else {
+		sql := fmt.Sprintf("CREATE OR REPLACE VIEW %s AS %s", qualifiedName, query)
+		if _, err := pool.Exec(ctx, sql); err != nil {
+			return fmt.Errorf("replace view: %w", err)
+		}
+	}
+	return nil
+}
+
 // ListViews returns all user-defined views.
 func ListViews(ctx context.Context, pool *pgxpool.Pool) ([]DBView, error) {
 	rows, err := pool.Query(ctx, `

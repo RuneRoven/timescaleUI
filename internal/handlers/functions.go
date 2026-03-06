@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -90,6 +91,59 @@ func (h *FunctionHandler) DropView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/functions", http.StatusSeeOther)
+}
+
+func (h *FunctionHandler) ViewDetail(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	schema := r.PathValue("schema")
+	name := r.PathValue("name")
+	materialized := r.URL.Query().Get("materialized") == "true"
+
+	detail, err := db.GetViewDetail(r.Context(), pool, schema, name, materialized)
+	if err != nil {
+		h.logger.Error("get view detail", "error", err, "schema", schema, "name", name)
+		http.Error(w, "View not found", http.StatusNotFound)
+		return
+	}
+
+	data := map[string]any{"View": detail}
+
+	if templates.IsHTMX(r) {
+		h.renderer.Partial(w, http.StatusOK, "pages/view_detail.html", data)
+		return
+	}
+	h.renderer.Page(w, http.StatusOK, "pages/view_detail.html", templates.PageData{
+		Title:     fmt.Sprintf("%s.%s", schema, name),
+		User:      middleware.UserFromContext(r.Context()),
+		Active:    "Functions",
+		CSRFToken: csrfFromContext(r),
+		Content:   data,
+	})
+}
+
+func (h *FunctionHandler) UpdateViewDefinition(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	schema := r.FormValue("schema")
+	name := r.FormValue("name")
+	query := r.FormValue("query")
+	materialized := r.FormValue("materialized") == "true"
+
+	if err := db.UpdateViewDefinition(r.Context(), pool, schema, name, query, materialized); err != nil {
+		h.logger.Error("update view definition", "error", err)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	matParam := ""
+	if materialized {
+		matParam = "?materialized=true"
+	}
+	http.Redirect(w, r, fmt.Sprintf("/functions/view/%s/%s%s", schema, name, matParam), http.StatusSeeOther)
 }
 
 func (h *FunctionHandler) List(w http.ResponseWriter, r *http.Request) {

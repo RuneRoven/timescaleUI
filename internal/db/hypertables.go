@@ -32,16 +32,25 @@ type Hypertable struct {
 	RetentionPolicy   string
 }
 
+// Index represents a table index.
+type Index struct {
+	Name       string
+	Definition string
+}
+
 // HypertableDetail holds detailed info for a single hypertable.
 type HypertableDetail struct {
 	Hypertable
 	Columns       []Column
 	Chunks        []Chunk
+	Indexes       []Index
 	TimeDimension string
 	ChunkInterval string
 	Compressed    bool
 	SegmentBy     string
 	OrderBy       string
+	ReorderIndex  string
+	ReorderJobID  *int
 }
 
 // Column represents a table column.
@@ -196,7 +205,136 @@ func GetHypertable(ctx context.Context, pool *pgxpool.Pool, schema, table string
 		}
 	}
 
+	// Indexes
+	idxRows, err := pool.Query(ctx, `
+		SELECT indexname, indexdef
+		FROM pg_indexes
+		WHERE schemaname = $1 AND tablename = $2
+		ORDER BY indexname`, schema, table)
+	if err == nil {
+		defer idxRows.Close()
+		for idxRows.Next() {
+			var idx Index
+			if err := idxRows.Scan(&idx.Name, &idx.Definition); err == nil {
+				d.Indexes = append(d.Indexes, idx)
+			}
+		}
+	}
+
+	// Reorder policy
+	var reorderJobID *int
+	var reorderIdx *string
+	err = pool.QueryRow(ctx, `
+		SELECT j.job_id, j.config->>'index_name'
+		FROM timescaledb_information.jobs j
+		WHERE j.proc_name = 'policy_reorder'
+		  AND j.hypertable_schema = $1
+		  AND j.hypertable_name = $2
+		LIMIT 1`, schema, table).Scan(&reorderJobID, &reorderIdx)
+	if err == nil {
+		d.ReorderJobID = reorderJobID
+		if reorderIdx != nil {
+			d.ReorderIndex = *reorderIdx
+		}
+	}
+
 	return d, nil
+}
+
+// SetChunkTimeInterval changes the chunk time interval for a hypertable.
+func SetChunkTimeInterval(ctx context.Context, pool *pgxpool.Pool, schema, table, interval string) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(table); err != nil {
+		return err
+	}
+
+	ht := pgx.Identifier{schema, table}.Sanitize()
+	sql := fmt.Sprintf("SELECT set_chunk_time_interval(%s, INTERVAL '%s')", ht, interval)
+	if _, err := pool.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("set chunk time interval: %w", err)
+	}
+	return nil
+}
+
+// AddReorderPolicy adds a reorder policy on a hypertable.
+func AddReorderPolicy(ctx context.Context, pool *pgxpool.Pool, schema, table, indexName string) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(table); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(indexName); err != nil {
+		return err
+	}
+
+	ht := pgx.Identifier{schema, table}.Sanitize()
+	sql := fmt.Sprintf("SELECT add_reorder_policy(%s, '%s', if_not_exists => true)", ht, indexName)
+	if _, err := pool.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("add reorder policy: %w", err)
+	}
+	return nil
+}
+
+// RemoveReorderPolicy removes a reorder policy from a hypertable.
+func RemoveReorderPolicy(ctx context.Context, pool *pgxpool.Pool, schema, table string) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(table); err != nil {
+		return err
+	}
+
+	ht := pgx.Identifier{schema, table}.Sanitize()
+	sql := fmt.Sprintf("SELECT remove_reorder_policy(%s, if_not_exists => true)", ht)
+	if _, err := pool.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("remove reorder policy: %w", err)
+	}
+	return nil
+}
+
+// CreateIndex creates an index on a hypertable.
+func CreateIndex(ctx context.Context, pool *pgxpool.Pool, schema, table, indexName, columns string, unique bool) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(table); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(indexName); err != nil {
+		return err
+	}
+
+	ht := pgx.Identifier{schema, table}.Sanitize()
+	idxName := pgx.Identifier{indexName}.Sanitize()
+	uniqueStr := ""
+	if unique {
+		uniqueStr = "UNIQUE "
+	}
+	sql := fmt.Sprintf("CREATE %sINDEX %s ON %s (%s)", uniqueStr, idxName, ht, columns)
+	if _, err := pool.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("create index: %w", err)
+	}
+	return nil
+}
+
+// DropIndex drops an index.
+func DropIndex(ctx context.Context, pool *pgxpool.Pool, schema, indexName string) error {
+	if err := ValidateIdentifier(schema); err != nil {
+		return err
+	}
+	if err := ValidateIdentifier(indexName); err != nil {
+		return err
+	}
+
+	idx := pgx.Identifier{schema, indexName}.Sanitize()
+	sql := fmt.Sprintf("DROP INDEX %s", idx)
+	if _, err := pool.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("drop index: %w", err)
+	}
+	return nil
 }
 
 // CreateHypertable converts an existing table to a hypertable.

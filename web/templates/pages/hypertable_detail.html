@@ -17,6 +17,14 @@
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Column</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.TimeDimension}}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Chunk Interval</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.ChunkInterval}}</dd></div>
             </dl>
+            <form method="POST" action="/hypertables/update-chunk-interval" class="mt-4 flex gap-2">
+                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="schema" value="{{.Content.Schema}}">
+                <input type="hidden" name="table" value="{{.Content.Name}}">
+                <input type="text" name="chunk_interval" value="{{.Content.ChunkInterval}}" placeholder="7 days"
+                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+            </form>
         </div>
 
         <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
@@ -31,6 +39,92 @@
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Order By</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.OrderBy}}</dd></div>
                 {{end}}
             </dl>
+        </div>
+    </div>
+
+    <!-- Reorder Policy -->
+    <div class="mt-6 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+        <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Reorder Policy</h2>
+        {{if .Content.ReorderJobID}}
+        <p class="text-sm text-gray-600 dark:text-gray-400">Active reorder index: <span class="font-medium text-gray-900 dark:text-gray-100">{{.Content.ReorderIndex}}</span></p>
+        <form method="POST" action="/hypertables/remove-reorder-policy" class="mt-3" onsubmit="return confirm('Remove reorder policy?')">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="schema" value="{{.Content.Schema}}">
+            <input type="hidden" name="table" value="{{.Content.Name}}">
+            <button type="submit" class="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:bg-gray-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-gray-600">Remove Policy</button>
+        </form>
+        {{else}}
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">No reorder policy configured.</p>
+        {{if .Content.Indexes}}
+        <form method="POST" action="/hypertables/add-reorder-policy" class="flex gap-2">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="schema" value="{{.Content.Schema}}">
+            <input type="hidden" name="table" value="{{.Content.Name}}">
+            <select name="index_name" required class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                {{range .Content.Indexes}}<option value="{{.Name}}">{{.Name}}</option>{{end}}
+            </select>
+            <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Add Policy</button>
+        </form>
+        {{end}}
+        {{end}}
+    </div>
+
+    <!-- Indexes -->
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 dark:text-gray-100">Indexes ({{len .Content.Indexes}})</h2>
+        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Definition</th>
+                        <th class="px-4 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {{range .Content.Indexes}}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Name}}</td>
+                        <td class="px-4 py-2.5 text-sm text-gray-600 font-mono dark:text-gray-400 max-w-lg truncate">{{.Definition}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-right text-sm">
+                            <form method="POST" action="/hypertables/drop-index" class="inline" onsubmit="return confirm('Drop index {{.Name}}?')">
+                                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="schema" value="{{$.Content.Schema}}">
+                                <input type="hidden" name="table" value="{{$.Content.Name}}">
+                                <input type="hidden" name="index_name" value="{{.Name}}">
+                                <button type="submit" class="text-red-600 hover:text-red-800 font-medium dark:text-red-400 dark:hover:text-red-300">Drop</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No indexes found</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        <!-- Create Index -->
+        <div class="mt-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 class="text-sm font-medium text-gray-900 mb-3 dark:text-gray-100">Create Index</h3>
+            <form method="POST" action="/hypertables/create-index" class="flex flex-wrap gap-2 items-end">
+                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="schema" value="{{.Content.Schema}}">
+                <input type="hidden" name="table" value="{{.Content.Name}}">
+                <div class="flex-1 min-w-[150px]">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Index Name</label>
+                    <input type="text" name="index_name" required placeholder="idx_my_index"
+                           class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Columns</label>
+                    <input type="text" name="columns" required placeholder="time DESC, device_id"
+                           class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="unique" id="unique-idx" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="unique-idx" class="text-sm text-gray-700 dark:text-gray-300">Unique</label>
+                </div>
+                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Create</button>
+            </form>
         </div>
     </div>
 

@@ -137,18 +137,31 @@ func (s *Server) routes(staticFS fs.FS) {
 	s.mux.Handle("POST /hypertables/create", requireAuth(http.HandlerFunc(htH.Create)))
 	s.mux.Handle("GET /hypertables/columns", requireAuth(http.HandlerFunc(htH.GetColumns)))
 	s.mux.Handle("GET /hypertables/{schema}/{table}", requireAuth(http.HandlerFunc(htH.Detail)))
+	s.mux.Handle("POST /hypertables/update-chunk-interval", requireAuth(http.HandlerFunc(htH.UpdateChunkInterval)))
+	s.mux.Handle("POST /hypertables/add-reorder-policy", requireAuth(http.HandlerFunc(htH.AddReorderPolicy)))
+	s.mux.Handle("POST /hypertables/remove-reorder-policy", requireAuth(http.HandlerFunc(htH.RemoveReorderPolicy)))
+	s.mux.Handle("POST /hypertables/create-index", requireAuth(http.HandlerFunc(htH.CreateIndex)))
+	s.mux.Handle("POST /hypertables/drop-index", requireAuth(http.HandlerFunc(htH.DropIndex)))
 
 	// Continuous Aggregates
 	s.mux.Handle("GET /continuous-aggregates", requireAuth(http.HandlerFunc(caH.List)))
+	s.mux.Handle("GET /continuous-aggregates/{schema}/{name}", requireAuth(http.HandlerFunc(caH.Detail)))
 	s.mux.Handle("POST /continuous-aggregates/create", requireAuth(http.HandlerFunc(caH.Create)))
 	s.mux.Handle("POST /continuous-aggregates/refresh", requireAuth(http.HandlerFunc(caH.Refresh)))
 	s.mux.Handle("POST /continuous-aggregates/delete", requireAuth(http.HandlerFunc(caH.Delete)))
+	s.mux.Handle("POST /continuous-aggregates/toggle-materialized", requireAuth(http.HandlerFunc(caH.ToggleMaterializedOnly)))
+	s.mux.Handle("POST /continuous-aggregates/update-definition", requireAuth(http.HandlerFunc(caH.UpdateDefinition)))
+	s.mux.Handle("POST /continuous-aggregates/add-policy", requireAuth(http.HandlerFunc(caH.AddPolicy)))
+	s.mux.Handle("POST /continuous-aggregates/remove-policy", requireAuth(http.HandlerFunc(caH.RemovePolicy)))
 
 	// Compression
 	s.mux.Handle("GET /compression", requireAuth(http.HandlerFunc(compH.List)))
+	s.mux.Handle("GET /compression/{schema}/{table}", requireAuth(http.HandlerFunc(compH.Detail)))
 	s.mux.Handle("POST /compression/enable", requireAuth(http.HandlerFunc(compH.Enable)))
 	s.mux.Handle("POST /compression/disable", requireAuth(http.HandlerFunc(compH.Disable)))
 	s.mux.Handle("POST /compression/compress", requireAuth(http.HandlerFunc(compH.CompressNow)))
+	s.mux.Handle("POST /compression/update-settings", requireAuth(http.HandlerFunc(compH.UpdateSettings)))
+	s.mux.Handle("POST /compression/update-policy", requireAuth(http.HandlerFunc(compH.UpdatePolicy)))
 
 	// Retention
 	s.mux.Handle("GET /retention", requireAuth(http.HandlerFunc(retH.List)))
@@ -161,10 +174,15 @@ func (s *Server) routes(staticFS fs.FS) {
 
 	// Jobs
 	s.mux.Handle("GET /jobs", requireAuth(http.HandlerFunc(jobH.List)))
+	s.mux.Handle("GET /jobs/{id}", requireAuth(http.HandlerFunc(jobH.Detail)))
 	s.mux.Handle("POST /jobs/action", requireAuth(http.HandlerFunc(jobH.Action)))
+	s.mux.Handle("POST /jobs/update-schedule", requireAuth(http.HandlerFunc(jobH.UpdateSchedule)))
+	s.mux.Handle("POST /jobs/update-config", requireAuth(http.HandlerFunc(jobH.UpdateConfig)))
 
 	// Functions & Views
 	s.mux.Handle("GET /functions", requireAuth(http.HandlerFunc(funcH.List)))
+	s.mux.Handle("GET /functions/view/{schema}/{name}", requireAuth(http.HandlerFunc(funcH.ViewDetail)))
+	s.mux.Handle("POST /functions/update-view-definition", requireAuth(http.HandlerFunc(funcH.UpdateViewDefinition)))
 	s.mux.Handle("POST /functions/create-matview", requireAuth(http.HandlerFunc(funcH.CreateMatView)))
 	s.mux.Handle("POST /functions/refresh-matview", requireAuth(http.HandlerFunc(funcH.RefreshMatView)))
 	s.mux.Handle("POST /functions/drop-view", requireAuth(http.HandlerFunc(funcH.DropView)))

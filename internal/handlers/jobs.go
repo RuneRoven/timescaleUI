@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -41,6 +42,97 @@ func (h *JobHandler) List(w http.ResponseWriter, r *http.Request) {
 		CSRFToken: csrfFromContext(r),
 		Content:   data,
 	})
+}
+
+func (h *JobHandler) Detail(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	jobID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid job ID", http.StatusBadRequest)
+		return
+	}
+
+	job, err := db.GetJob(r.Context(), pool, jobID)
+	if err != nil {
+		h.logger.Error("get job", "error", err, "job_id", jobID)
+		http.Error(w, "Job not found", http.StatusNotFound)
+		return
+	}
+
+	errors, err := db.GetJobErrors(r.Context(), pool, jobID)
+	if err != nil {
+		h.logger.Error("get job errors", "error", err, "job_id", jobID)
+	}
+
+	data := map[string]any{"Job": job, "Errors": errors}
+
+	if templates.IsHTMX(r) {
+		h.renderer.Partial(w, http.StatusOK, "pages/job_detail.html", data)
+		return
+	}
+	h.renderer.Page(w, http.StatusOK, "pages/job_detail.html", templates.PageData{
+		Title:     fmt.Sprintf("Job %d", jobID),
+		User:      middleware.UserFromContext(r.Context()),
+		Active:    "Jobs",
+		CSRFToken: csrfFromContext(r),
+		Content:   data,
+	})
+}
+
+func (h *JobHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	jobID, err := strconv.Atoi(r.FormValue("job_id"))
+	if err != nil {
+		http.Error(w, "Invalid job ID", http.StatusBadRequest)
+		return
+	}
+
+	interval := r.FormValue("schedule_interval")
+	if interval == "" {
+		http.Error(w, "Schedule interval is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateJobSchedule(r.Context(), pool, jobID, interval); err != nil {
+		h.logger.Error("update job schedule", "error", err, "job_id", jobID)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", jobID), http.StatusSeeOther)
+}
+
+func (h *JobHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	jobID, err := strconv.Atoi(r.FormValue("job_id"))
+	if err != nil {
+		http.Error(w, "Invalid job ID", http.StatusBadRequest)
+		return
+	}
+
+	config := r.FormValue("config")
+	if config == "" {
+		http.Error(w, "Config is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateJobConfig(r.Context(), pool, jobID, config); err != nil {
+		h.logger.Error("update job config", "error", err, "job_id", jobID)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", jobID), http.StatusSeeOther)
 }
 
 func (h *JobHandler) Action(w http.ResponseWriter, r *http.Request) {

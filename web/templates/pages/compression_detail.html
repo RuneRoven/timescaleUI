@@ -1,0 +1,117 @@
+{{define "pages/compression_detail.html"}}
+<div>
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/compression" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{.Content.Detail.Schema}}.{{.Content.Detail.Table}}</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Compression Settings</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Current Settings -->
+        <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Compression Settings</h2>
+            <dl class="space-y-2 text-sm">
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Status</dt><dd>
+                    {{if .Content.Detail.Enabled}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Enabled</span>
+                    {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">Disabled</span>{{end}}
+                </dd></div>
+                {{if .Content.Detail.Enabled}}
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Segment By</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{if .Content.Detail.SegmentBy}}{{.Content.Detail.SegmentBy}}{{else}}—{{end}}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Order By</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{if .Content.Detail.OrderBy}}{{.Content.Detail.OrderBy}}{{else}}—{{end}}</dd></div>
+                {{end}}
+            </dl>
+            {{if .Content.Detail.Enabled}}
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs text-amber-600 dark:text-amber-400 mb-3">Changing settings will decompress all chunks first.</p>
+                <form method="POST" action="/compression/update-settings" class="space-y-3" onsubmit="return confirm('This will decompress all chunks before re-enabling with new settings. Continue?')">
+                    <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="schema" value="{{.Content.Detail.Schema}}">
+                    <input type="hidden" name="table" value="{{.Content.Detail.Table}}">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Segment By</label>
+                        <input type="text" name="segment_by" value="{{.Content.Detail.SegmentBy}}" placeholder="device_id"
+                               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Order By</label>
+                        <input type="text" name="order_by" value="{{.Content.Detail.OrderBy}}" placeholder="time DESC"
+                               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    </div>
+                    <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update Settings</button>
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Policy -->
+        <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Compression Policy</h2>
+            {{if .Content.Detail.PolicyJobID}}
+            <dl class="space-y-2 text-sm">
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Compress After</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.Detail.PolicyInterval}}</dd></div>
+            </dl>
+            <form method="POST" action="/compression/update-policy" class="mt-4 flex gap-2">
+                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="schema" value="{{.Content.Detail.Schema}}">
+                <input type="hidden" name="table" value="{{.Content.Detail.Table}}">
+                <input type="text" name="compress_after" value="{{.Content.Detail.PolicyInterval}}" placeholder="7 days"
+                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+            </form>
+            {{else}}
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No compression policy configured.</p>
+            {{if .Content.Detail.Enabled}}
+            <form method="POST" action="/compression/update-policy" class="flex gap-2">
+                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="schema" value="{{.Content.Detail.Schema}}">
+                <input type="hidden" name="table" value="{{.Content.Detail.Table}}">
+                <input type="text" name="compress_after" required placeholder="7 days"
+                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Add Policy</button>
+            </form>
+            {{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Chunks -->
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 dark:text-gray-100">Chunks ({{len .Content.Detail.Chunks}})</h2>
+        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Chunk</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Range Start</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Range End</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Compressed</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Size</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {{range .Content.Detail.Chunks}}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Name}}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{formatTime .RangeStart}}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{formatTime .RangeEnd}}</td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-sm">
+                                {{if .IsCompressed}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Yes</span>
+                                {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">No</span>{{end}}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{.TotalSize}}</td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No chunks found</td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

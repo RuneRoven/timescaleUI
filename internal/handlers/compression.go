@@ -43,6 +43,79 @@ func (h *CompressionHandler) List(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *CompressionHandler) Detail(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	schema := r.PathValue("schema")
+	table := r.PathValue("table")
+
+	detail, err := db.GetCompressionDetail(r.Context(), pool, schema, table)
+	if err != nil {
+		h.logger.Error("get compression detail", "error", err, "schema", schema, "table", table)
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+
+	data := map[string]any{"Detail": detail}
+
+	if templates.IsHTMX(r) {
+		h.renderer.Partial(w, http.StatusOK, "pages/compression_detail.html", data)
+		return
+	}
+	h.renderer.Page(w, http.StatusOK, "pages/compression_detail.html", templates.PageData{
+		Title:     fmt.Sprintf("Compression: %s.%s", schema, table),
+		User:      middleware.UserFromContext(r.Context()),
+		Active:    "Compression",
+		CSRFToken: csrfFromContext(r),
+		Content:   data,
+	})
+}
+
+func (h *CompressionHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	schema := r.FormValue("schema")
+	table := r.FormValue("table")
+	segmentBy := r.FormValue("segment_by")
+	orderBy := r.FormValue("order_by")
+
+	if err := db.UpdateCompressionSettings(r.Context(), pool, schema, table, segmentBy, orderBy); err != nil {
+		h.logger.Error("update compression settings", "error", err)
+		http.Error(w, fmt.Sprintf("Failed: %v", err), http.StatusUnprocessableEntity)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/compression/%s/%s", schema, table), http.StatusSeeOther)
+}
+
+func (h *CompressionHandler) UpdatePolicy(w http.ResponseWriter, r *http.Request) {
+	pool := h.pool()
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	schema := r.FormValue("schema")
+	table := r.FormValue("table")
+	compressAfter := r.FormValue("compress_after")
+
+	// Remove existing policy first
+	if err := db.RemoveCompressionPolicy(r.Context(), pool, schema, table); err != nil {
+		h.logger.Error("remove compression policy", "error", err)
+	}
+
+	if err := db.AddCompressionPolicy(r.Context(), pool, schema, table, compressAfter); err != nil {
+		h.logger.Error("add compression policy", "error", err)
+		http.Error(w, fmt.Sprintf("Failed: %v", err), http.StatusUnprocessableEntity)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/compression/%s/%s", schema, table), http.StatusSeeOther)
+}
+
 func (h *CompressionHandler) Enable(w http.ResponseWriter, r *http.Request) {
 	pool := h.pool()
 	if err := r.ParseForm(); err != nil {
