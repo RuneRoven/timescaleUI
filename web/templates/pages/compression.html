@@ -1,50 +1,50 @@
 {{define "pages/compression.html"}}
 <div>
-    <h1 class="text-2xl font-bold text-gray-900">Compression</h1>
-    <p class="mt-1 text-sm text-gray-500">Manage compression settings for your hypertables</p>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Compression</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage compression settings for your hypertables</p>
 
-    <div class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+    <div class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Hypertable</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Compressed</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Uncompressed</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Hypertable</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Compressed</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Uncompressed</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
-                {{range .Stats}}
-                <tr class="hover:bg-gray-50">
-                    <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{{.Schema}}.{{.Table}}</td>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {{range .Content.Stats}}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Schema}}.{{.Table}}</td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm">
-                        {{if .Enabled}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Enabled</span>
-                        {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Disabled</span>{{end}}
+                        {{if .Enabled}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Enabled</span>
+                        {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">Disabled</span>{{end}}
                     </td>
-                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.NumCompressedChunks}} chunks</td>
-                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.NumUncompressedChunks}} chunks</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{.NumCompressedChunks}} chunks</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{.NumUncompressedChunks}} chunks</td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm space-x-2">
                         {{if .Enabled}}
                         <form method="POST" action="/compression/compress" class="inline">
                             <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
                             <input type="hidden" name="schema" value="{{.Schema}}">
                             <input type="hidden" name="table" value="{{.Table}}">
-                            <button type="submit" class="text-orange-600 hover:text-orange-800 font-medium">Compress Now</button>
+                            <button type="submit" class="text-orange-600 hover:text-orange-800 font-medium dark:text-orange-400 dark:hover:text-orange-300">Compress Now</button>
                         </form>
                         <form method="POST" action="/compression/disable" class="inline" onsubmit="return confirm('Disable compression?')">
                             <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
                             <input type="hidden" name="schema" value="{{.Schema}}">
                             <input type="hidden" name="table" value="{{.Table}}">
-                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Disable</button>
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium dark:text-red-400 dark:hover:text-red-300">Disable</button>
                         </form>
                         {{else}}
-                        <button onclick="showEnableModal('{{.Schema}}', '{{.Table}}')" class="text-orange-600 hover:text-orange-800 font-medium">Enable</button>
+                        <button onclick="showEnableModal('{{.Schema}}', '{{.Table}}')" class="text-orange-600 hover:text-orange-800 font-medium dark:text-orange-400 dark:hover:text-orange-300">Enable</button>
                         {{end}}
                     </td>
                 </tr>
                 {{else}}
-                <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hypertables found</td></tr>
+                <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hypertables found</td></tr>
                 {{end}}
             </tbody>
         </table>
@@ -52,30 +52,30 @@
 
     <!-- Enable Compression Modal -->
     <div id="enable-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Enable Compression</h2>
+        <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">Enable Compression</h2>
             <form method="POST" action="/compression/enable" class="space-y-4">
                 <input type="hidden" name="gorilla.csrf.Token" value="{{.CSRFToken}}">
                 <input type="hidden" id="enable-schema" name="schema">
                 <input type="hidden" id="enable-table" name="table">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Segment By (columns, comma-separated)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Segment By (columns, comma-separated)</label>
                     <input type="text" name="segment_by" placeholder="device_id"
-                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
-                    <p class="mt-1 text-xs text-gray-500">Columns used for grouping compressed data</p>
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Columns used for grouping compressed data</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Order By</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Order By</label>
                     <input type="text" name="order_by" placeholder="time DESC"
-                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Auto-compress After (optional)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-compress After (optional)</label>
                     <input type="text" name="compress_after" placeholder="7 days"
-                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
                 </div>
                 <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="document.getElementById('enable-modal').classList.add('hidden')" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700">Cancel</button>
+                    <button type="button" onclick="document.getElementById('enable-modal').classList.add('hidden')" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
                     <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">Enable</button>
                 </div>
             </form>

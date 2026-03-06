@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/RuneRoven/timescaleUI/internal/config"
 	"github.com/RuneRoven/timescaleUI/internal/db"
@@ -110,17 +112,26 @@ func (h *Handler) HandleSetup(w http.ResponseWriter, r *http.Request) {
 		DBSSLMode:  dbSSLMode,
 	}
 
-	// Test DB connection
-	pool, err := db.NewPool(r.Context(), db.ConnConfig{
+	// Test DB connection with a short timeout
+	connCtx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	connCfg := db.ConnConfig{
 		Host:     dbHost,
 		Port:     port,
 		User:     dbUser,
 		Password: dbPassword,
 		DBName:   dbName,
 		SSLMode:  dbSSLMode,
-	})
+	}
+	pool, err := db.NewPool(connCtx, connCfg)
 	if err != nil {
-		h.renderSetupError(w, r, fmt.Sprintf("Database connection failed: %v", err))
+		detail := fmt.Sprintf("Could not connect to %s:%d/%s as user %q", dbHost, port, dbName, dbUser)
+		if connCtx.Err() != nil {
+			detail += ". Connection timed out — if using Docker, make sure both containers are on the same network"
+		}
+		h.logger.Error("setup db connection failed", "host", dbHost, "port", port, "db", dbName, "error", err)
+		h.renderSetupError(w, r, detail)
 		return
 	}
 
@@ -137,7 +148,7 @@ func (h *Handler) HandleSetup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("setup completed", "admin_user", adminUser, "db_host", dbHost)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	fullRedirect(w, r, "/login")
 }
 
 // HandleLoginPage shows the login form.
@@ -185,17 +196,29 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	fullRedirect(w, r, "/")
 }
 
 // HandleLogout destroys the session.
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	h.sessions.Destroy(w)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	fullRedirect(w, r, "/login")
+}
+
+// fullRedirect forces a full page navigation (not HTMX swap).
+// When hx-boost intercepts a form POST, the redirect would normally
+// be followed as an AJAX request, rendering only the partial content
+// without the layout. HX-Redirect tells HTMX to do a real navigation.
+func fullRedirect(w http.ResponseWriter, r *http.Request, url string) {
+	if templates.IsHTMX(r) {
+		w.Header().Set("HX-Redirect", url)
+		return
+	}
+	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (h *Handler) renderSetupError(w http.ResponseWriter, r *http.Request, msg string) {
-	h.renderer.Page(w, http.StatusUnprocessableEntity, "pages/setup.html", templates.PageData{
+	h.renderer.Page(w, http.StatusOK, "pages/setup.html", templates.PageData{
 		Title:     "Setup",
 		CSRFToken: csrfToken(r),
 		Flashes:   []templates.Flash{{Type: "error", Message: msg}},
@@ -203,10 +226,10 @@ func (h *Handler) renderSetupError(w http.ResponseWriter, r *http.Request, msg s
 }
 
 func (h *Handler) renderLoginError(w http.ResponseWriter, r *http.Request, msg string) {
-	h.renderer.Page(w, http.StatusUnprocessableEntity, "pages/login.html", templates.PageData{
+	h.renderer.Page(w, http.StatusOK, "pages/login.html", templates.PageData{
 		Title:     "Login",
 		CSRFToken: csrfToken(r),
-		Content:   msg,
+		Flashes:   []templates.Flash{{Type: "error", Message: msg}},
 	})
 }
 

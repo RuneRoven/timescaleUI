@@ -39,24 +39,23 @@ func (s *SessionStore) Create(w http.ResponseWriter, username string) error {
 		Username:  username,
 		ExpiresAt: time.Now().Add(s.ttl),
 	}
-	encoded, err := s.codec.Encode(s.cookieKey, data)
+	cookieName := s.cookieKey
+	if !s.secure {
+		cookieName = "tsui-session"
+	}
+	encoded, err := s.codec.Encode(cookieName, data)
 	if err != nil {
 		return err
 	}
 
 	cookie := &http.Cookie{
-		Name:     s.cookieKey,
+		Name:     cookieName,
 		Value:    encoded,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   int(s.ttl.Seconds()),
-	}
-	if s.secure {
-		cookie.Secure = true
-	} else {
-		// __Host- prefix requires Secure; fall back to different name for dev
-		cookie.Name = "tsui-session"
+		Secure:   s.secure,
 	}
 	http.SetCookie(w, cookie)
 	return nil

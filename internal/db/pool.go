@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -21,10 +22,11 @@ type ConnConfig struct {
 func (c ConnConfig) DSN() string {
 	sslmode := c.SSLMode
 	if sslmode == "" {
-		sslmode = "prefer"
+		sslmode = "disable"
 	}
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		c.User, c.Password, c.Host, c.Port, c.DBName, sslmode)
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s&connect_timeout=10",
+		url.QueryEscape(c.User), url.QueryEscape(c.Password),
+		c.Host, c.Port, c.DBName, sslmode)
 }
 
 // NewPool creates a pgxpool and verifies connectivity.
@@ -37,12 +39,12 @@ func NewPool(ctx context.Context, cfg ConnConfig) (*pgxpool.Pool, error) {
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
-		return nil, fmt.Errorf("create pool: %w", err)
+		return nil, fmt.Errorf("create pool (%s:%d/%s): %w", cfg.Host, cfg.Port, cfg.DBName, err)
 	}
 
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("ping database: %w", err)
+		return nil, fmt.Errorf("ping %s:%d/%s: %w", cfg.Host, cfg.Port, cfg.DBName, err)
 	}
 
 	return pool, nil

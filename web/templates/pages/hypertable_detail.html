@@ -1,60 +1,58 @@
 {{define "pages/hypertable_detail.html"}}
 <div>
     <div class="flex items-center gap-3 mb-6">
-        <a href="/hypertables" class="text-gray-400 hover:text-gray-600">
+        <a href="/hypertables" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{.Schema}}.{{.Name}}</h1>
-            <p class="text-sm text-gray-500">Owner: {{.Owner}} | Dimensions: {{.NumDimensions}} | Chunks: {{.ChunkCount}} | Size: {{.TotalSize}}</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{.Content.Schema}}.{{.Content.Name}}</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Owner: {{.Content.Owner}} | Dimensions: {{.Content.NumDimensions}} | Chunks: {{.Content.ChunkCount}} | Size: {{.Content.TotalSize}}</p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Info cards -->
-        <div class="rounded-lg border border-gray-200 bg-white p-5">
-            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Time Dimension</h2>
+        <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Time Dimension</h2>
             <dl class="space-y-2 text-sm">
-                <div class="flex justify-between"><dt class="text-gray-500">Column</dt><dd class="font-medium text-gray-900">{{.TimeDimension}}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Chunk Interval</dt><dd class="font-medium text-gray-900">{{.ChunkInterval}}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Column</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.TimeDimension}}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Chunk Interval</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.ChunkInterval}}</dd></div>
             </dl>
         </div>
 
-        <div class="rounded-lg border border-gray-200 bg-white p-5">
-            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Compression</h2>
+        <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">Compression</h2>
             <dl class="space-y-2 text-sm">
-                <div class="flex justify-between"><dt class="text-gray-500">Status</dt><dd>
-                    {{if .Compressed}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Enabled</span>
-                    {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Disabled</span>{{end}}
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Status</dt><dd>
+                    {{if .Content.Compressed}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Enabled</span>
+                    {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">Disabled</span>{{end}}
                 </dd></div>
-                {{if .Compressed}}
-                <div class="flex justify-between"><dt class="text-gray-500">Segment By</dt><dd class="font-medium text-gray-900">{{.SegmentBy}}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Order By</dt><dd class="font-medium text-gray-900">{{.OrderBy}}</dd></div>
+                {{if .Content.Compressed}}
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Segment By</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.SegmentBy}}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Order By</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.OrderBy}}</dd></div>
                 {{end}}
             </dl>
         </div>
     </div>
 
-    <!-- Columns -->
     <div class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Columns</h2>
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 dark:text-gray-100">Columns</h2>
+        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nullable</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Default</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Nullable</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Default</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {{range .Columns}}
-                    <tr class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900">{{.Name}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 font-mono">{{.Type}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600">{{if .Nullable}}Yes{{else}}No{{end}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-500 font-mono">{{.Default}}</td>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {{range .Content.Columns}}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Name}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 font-mono dark:text-gray-400">{{.Type}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{if .Nullable}}Yes{{else}}No{{end}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-500 font-mono dark:text-gray-400">{{.Default}}</td>
                     </tr>
                     {{end}}
                 </tbody>
@@ -62,34 +60,33 @@
         </div>
     </div>
 
-    <!-- Chunks -->
     <div class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Chunks ({{len .Chunks}})</h2>
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 dark:text-gray-100">Chunks ({{len .Content.Chunks}})</h2>
+        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Chunk</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Range Start</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Range End</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Compressed</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Size</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Chunk</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Range Start</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Range End</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Compressed</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Size</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {{range .Chunks}}
-                    <tr class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900">{{.Name}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600">{{formatTime .RangeStart}}</td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600">{{formatTime .RangeEnd}}</td>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {{range .Content.Chunks}}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100">{{.Name}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{formatTime .RangeStart}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{formatTime .RangeEnd}}</td>
                         <td class="whitespace-nowrap px-4 py-2.5 text-sm">
-                            {{if .IsCompressed}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Yes</span>
-                            {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">No</span>{{end}}
+                            {{if .IsCompressed}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Yes</span>
+                            {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">No</span>{{end}}
                         </td>
-                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600">{{.TotalSize}}</td>
+                        <td class="whitespace-nowrap px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400">{{.TotalSize}}</td>
                     </tr>
                     {{else}}
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No chunks found</td></tr>
+                    <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No chunks found</td></tr>
                     {{end}}
                 </tbody>
             </table>

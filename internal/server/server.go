@@ -165,6 +165,9 @@ func (s *Server) routes(staticFS fs.FS) {
 
 	// Functions & Views
 	s.mux.Handle("GET /functions", requireAuth(http.HandlerFunc(funcH.List)))
+	s.mux.Handle("POST /functions/create-matview", requireAuth(http.HandlerFunc(funcH.CreateMatView)))
+	s.mux.Handle("POST /functions/refresh-matview", requireAuth(http.HandlerFunc(funcH.RefreshMatView)))
+	s.mux.Handle("POST /functions/drop-view", requireAuth(http.HandlerFunc(funcH.DropView)))
 
 	// Tiering
 	s.mux.Handle("GET /tiering", requireAuth(http.HandlerFunc(tierH.Page)))

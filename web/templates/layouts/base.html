@@ -1,5 +1,5 @@
 {{define "layouts/base.html"}}<!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,25 +8,25 @@
     <link rel="stylesheet" href="/static/css/app.css">
     <script src="/static/js/htmx.min.js"></script>
     <script>
-        document.body.addEventListener('htmx:configRequest', function(e) {
-            const token = document.querySelector('meta[name="csrf-token"]')?.content;
-            if (token) {
-                e.detail.headers['X-CSRF-Token'] = token;
-            }
-        });
+    (function() {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark' || (!t || t === 'auto') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    })();
     </script>
 </head>
-<body class="h-full" hx-boost="true">
+<body class="h-full bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
     {{if .User}}
     <div class="min-h-full flex">
         {{template "partials/nav.html" .}}
-        <main class="flex-1 p-6 lg:p-8">
+        <main id="main-content" class="flex-1 p-6 lg:p-8" hx-boost="true" hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
             {{range .Flashes}}
             <div class="mb-4 rounded-lg border px-4 py-3 text-sm
-                {{if eq .Type "success"}}border-emerald-200 bg-emerald-50 text-emerald-800{{end}}
-                {{if eq .Type "error"}}border-red-200 bg-red-50 text-red-800{{end}}
-                {{if eq .Type "info"}}border-blue-200 bg-blue-50 text-blue-800{{end}}
-                {{if eq .Type "warning"}}border-amber-200 bg-amber-50 text-amber-800{{end}}
+                {{if eq .Type "success"}}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300{{end}}
+                {{if eq .Type "error"}}border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/50 dark:text-red-300{{end}}
+                {{if eq .Type "info"}}border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/50 dark:text-blue-300{{end}}
+                {{if eq .Type "warning"}}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300{{end}}
             ">{{.Message}}</div>
             {{end}}
             {{.Content}}
@@ -34,8 +34,63 @@
     </div>
     {{else}}
     <main class="min-h-full flex items-center justify-center p-4">
+        {{range .Flashes}}
+        <div class="mb-4 w-full max-w-lg rounded-lg border px-4 py-3 text-sm
+            {{if eq .Type "success"}}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300{{end}}
+            {{if eq .Type "error"}}border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/50 dark:text-red-300{{end}}
+            {{if eq .Type "info"}}border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/50 dark:text-blue-300{{end}}
+            {{if eq .Type "warning"}}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300{{end}}
+        ">{{.Message}}</div>
+        {{end}}
         {{.Content}}
     </main>
     {{end}}
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(e) {
+            var token = document.querySelector('meta[name="csrf-token"]');
+            if (token) {
+                e.detail.headers['X-CSRF-Token'] = token.content;
+            }
+        });
+
+        function setTheme(theme) {
+            localStorage.setItem('theme', theme);
+            if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            document.querySelectorAll('[data-theme-option]').forEach(function(el) {
+                var isActive = el.getAttribute('data-theme-option') === theme;
+                el.classList.toggle('border-orange-500', isActive);
+                el.classList.toggle('bg-orange-50', isActive);
+                el.classList.toggle('dark:bg-orange-900/30', isActive);
+                el.classList.toggle('border-gray-200', !isActive);
+                el.classList.toggle('dark:border-gray-600', !isActive);
+            });
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+            var t = localStorage.getItem('theme');
+            if (!t || t === 'auto') {
+                setTheme('auto');
+            }
+        });
+
+        // Update active nav item after HTMX swaps
+        document.body.addEventListener('htmx:afterSwap', function(e) {
+            if (e.detail.target.id === 'main-content') {
+                var path = window.location.pathname;
+                document.querySelectorAll('[data-nav-item]').forEach(function(link) {
+                    var href = link.getAttribute('data-nav-item');
+                    var isActive = (href === '/' && path === '/') || (href !== '/' && path.startsWith(href));
+                    link.className = 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ' +
+                        (isActive
+                            ? 'bg-orange-50 text-orange-700 font-medium dark:bg-orange-900/30 dark:text-orange-400'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200');
+                });
+            }
+        });
+    </script>
 </body>
 </html>{{end}}

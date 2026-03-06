@@ -5,24 +5,24 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"/>
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h8M8 8h8M8 16h5"/>
         </svg>
-        <h1 class="mt-4 text-2xl font-bold text-gray-900">TimescaleUI</h1>
-        <p class="mt-2 text-sm text-gray-600">Sign in to your account</p>
+        <h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">TimescaleUI</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Sign in to your account</p>
     </div>
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6 dark:bg-gray-800 dark:ring-gray-700">
         {{if .Content}}
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{.Content}}</div>
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/50 dark:text-red-300">{{.Content}}</div>
         {{end}}
         <form method="POST" action="/login" class="space-y-5">
             <input type="hidden" name="gorilla.csrf.Token" value="{{.CSRFToken}}">
             <div>
-                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
                 <input type="text" id="username" name="username" required autocomplete="username"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
             </div>
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                 <input type="password" id="password" name="password" required autocomplete="current-password"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
             </div>
             <button type="submit"
                     class="w-full flex justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors">

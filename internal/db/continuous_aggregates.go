@@ -9,14 +9,13 @@ import (
 
 // ContinuousAggregate represents a continuous aggregate.
 type ContinuousAggregate struct {
-	Schema              string
-	Name                string
-	ViewOwner           string
-	MaterializedOnly    bool
-	SourceHypertable    string
-	ViewDefinition      string
-	CompressionEnabled  bool
-	FinalizedForm       bool
+	Schema             string
+	Name               string
+	ViewOwner          string
+	MaterializedOnly   bool
+	SourceHypertable   string
+	ViewDefinition     string
+	CompressionEnabled bool
 }
 
 // ListContinuousAggregates returns all continuous aggregates.
@@ -29,8 +28,7 @@ func ListContinuousAggregates(ctx context.Context, pool *pgxpool.Pool) ([]Contin
 			ca.materialized_only,
 			COALESCE(ca.hypertable_schema || '.' || ca.hypertable_name, ''),
 			ca.view_definition,
-			ca.compression_enabled,
-			ca.finalized
+			ca.compression_enabled
 		FROM timescaledb_information.continuous_aggregates ca
 		ORDER BY ca.view_schema, ca.view_name`)
 	if err != nil {
@@ -42,7 +40,7 @@ func ListContinuousAggregates(ctx context.Context, pool *pgxpool.Pool) ([]Contin
 	for rows.Next() {
 		var ca ContinuousAggregate
 		if err := rows.Scan(&ca.Schema, &ca.Name, &ca.ViewOwner, &ca.MaterializedOnly,
-			&ca.SourceHypertable, &ca.ViewDefinition, &ca.CompressionEnabled, &ca.FinalizedForm); err != nil {
+			&ca.SourceHypertable, &ca.ViewDefinition, &ca.CompressionEnabled); err != nil {
 			return nil, fmt.Errorf("scan CA: %w", err)
 		}
 		result = append(result, ca)

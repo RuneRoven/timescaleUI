@@ -5,69 +5,94 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"/>
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h8M8 8h8M8 16h5"/>
         </svg>
-        <h1 class="mt-4 text-2xl font-bold text-gray-900">Welcome to TimescaleUI</h1>
-        <p class="mt-2 text-sm text-gray-600">Set up your admin account and database connection to get started.</p>
+        <h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome to TimescaleUI</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Set up your admin account and database connection to get started.</p>
     </div>
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
-        <form method="POST" action="/setup" class="space-y-6">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6 dark:bg-gray-800 dark:ring-gray-700">
+        <form method="POST" action="/setup" class="space-y-6" id="setup-form">
             <input type="hidden" name="gorilla.csrf.Token" value="{{.CSRFToken}}">
             <fieldset>
-                <legend class="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2 w-full">Admin Account</legend>
+                <legend class="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2 w-full dark:text-gray-100 dark:border-gray-700">Admin Account</legend>
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="admin_user" class="block text-sm font-medium text-gray-700">Username</label>
+                        <label for="admin_user" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
                         <input type="text" id="admin_user" name="admin_user" required autocomplete="username"
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                     </div>
                     <div>
-                        <label for="admin_password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <label for="admin_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                         <input type="password" id="admin_password" name="admin_password" required minlength="8" autocomplete="new-password"
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
-                        <p class="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum 8 characters</p>
                     </div>
                     <div>
-                        <label for="admin_password_confirm" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <label for="admin_password_confirm" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
                         <input type="password" id="admin_password_confirm" name="admin_password_confirm" required minlength="8" autocomplete="new-password"
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                     </div>
                 </div>
             </fieldset>
             <fieldset>
-                <legend class="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2 w-full">Database Connection</legend>
+                <legend class="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2 w-full dark:text-gray-100 dark:border-gray-700">Database Connection</legend>
                 <div class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Connection Method</label>
+                        <div class="flex gap-3">
+                            <label class="flex-1 relative cursor-pointer">
+                                <input type="radio" name="conn_method" value="docker" checked
+                                       class="peer sr-only" onchange="updateConnMethod()">
+                                <div class="rounded-lg border-2 border-gray-200 p-3 text-center text-sm peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/30 transition-colors dark:border-gray-600">
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">Docker Network</div>
+                                    <div class="text-xs text-gray-500 mt-0.5 dark:text-gray-400">Container-to-container</div>
+                                </div>
+                            </label>
+                            <label class="flex-1 relative cursor-pointer">
+                                <input type="radio" name="conn_method" value="external"
+                                       class="peer sr-only" onchange="updateConnMethod()">
+                                <div class="rounded-lg border-2 border-gray-200 p-3 text-center text-sm peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/30 transition-colors dark:border-gray-600">
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">External Host</div>
+                                    <div class="text-xs text-gray-500 mt-0.5 dark:text-gray-400">IP address or hostname</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="docker-hint" class="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
+                        <strong>Tip:</strong> Use the Docker Compose service name as the host (e.g. <code class="bg-blue-100 px-1 rounded dark:bg-blue-800">pgbouncer</code> or <code class="bg-blue-100 px-1 rounded dark:bg-blue-800">timescaledb</code>).
+                        Both containers must be on the same Docker network.
+                    </div>
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2">
-                            <label for="db_host" class="block text-sm font-medium text-gray-700">Host</label>
+                            <label for="db_host" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Host</label>
                             <input type="text" id="db_host" name="db_host" value="timescaledb" required
-                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                         </div>
                         <div>
-                            <label for="db_port" class="block text-sm font-medium text-gray-700">Port</label>
+                            <label for="db_port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Port</label>
                             <input type="number" id="db_port" name="db_port" value="5432" required
-                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                         </div>
                     </div>
                     <div>
-                        <label for="db_user" class="block text-sm font-medium text-gray-700">Username</label>
+                        <label for="db_user" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
                         <input type="text" id="db_user" name="db_user" value="postgres" required
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                     </div>
                     <div>
-                        <label for="db_password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <label for="db_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                         <input type="password" id="db_password" name="db_password" required autocomplete="off"
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                     </div>
                     <div>
-                        <label for="db_name" class="block text-sm font-medium text-gray-700">Database</label>
+                        <label for="db_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Database</label>
                         <input type="text" id="db_name" name="db_name" value="postgres" required
-                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                     </div>
                     <div>
-                        <label for="db_sslmode" class="block text-sm font-medium text-gray-700">SSL Mode</label>
+                        <label for="db_sslmode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSL Mode</label>
                         <select id="db_sslmode" name="db_sslmode"
-                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
-                            <option value="prefer">prefer</option>
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                             <option value="disable">disable</option>
+                            <option value="prefer">prefer</option>
                             <option value="require">require</option>
                             <option value="verify-ca">verify-ca</option>
                             <option value="verify-full">verify-full</option>
@@ -75,11 +100,59 @@
                     </div>
                 </div>
             </fieldset>
-            <button type="submit"
-                    class="w-full flex justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors">
-                Complete Setup
+            <button type="submit" id="setup-btn"
+                    class="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg id="setup-spinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span id="setup-btn-text">Complete Setup</span>
             </button>
         </form>
     </div>
 </div>
+<script>
+function updateConnMethod() {
+    var method = document.querySelector('input[name="conn_method"]:checked').value;
+    var hint = document.getElementById('docker-hint');
+    var hostInput = document.getElementById('db_host');
+    var portInput = document.getElementById('db_port');
+    var sslSelect = document.getElementById('db_sslmode');
+    if (method === 'docker') {
+        hint.style.display = '';
+        hostInput.value = 'timescaledb';
+        portInput.value = '5432';
+        sslSelect.value = 'disable';
+    } else {
+        hint.style.display = 'none';
+        hostInput.value = '';
+        portInput.value = '5432';
+        sslSelect.value = 'prefer';
+        hostInput.focus();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('setup-form');
+    if (!form) return;
+
+    form.addEventListener('htmx:beforeRequest', function() {
+        var btn = document.getElementById('setup-btn');
+        var spinner = document.getElementById('setup-spinner');
+        var text = document.getElementById('setup-btn-text');
+        if (btn) btn.disabled = true;
+        if (spinner) spinner.classList.remove('hidden');
+        if (text) text.textContent = 'Connecting to database...';
+    });
+
+    form.addEventListener('htmx:afterRequest', function() {
+        var btn = document.getElementById('setup-btn');
+        var spinner = document.getElementById('setup-spinner');
+        var text = document.getElementById('setup-btn-text');
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+        if (text) text.textContent = 'Complete Setup';
+    });
+});
+</script>
 {{end}}
