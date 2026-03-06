@@ -1,0 +1,6 @@
+{{define "partials/column_options.html"}}
+<option value="">Select time column...</option>
+{{range .}}
+<option value="{{.Name}}">{{.Name}} ({{.Type}})</option>
+{{end}}
+{{end}}

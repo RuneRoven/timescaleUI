@@ -1,0 +1,41 @@
+{{define "layouts/base.html"}}<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{.CSRFToken}}">
+    <title>{{.Title}} — TimescaleUI</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(e) {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) {
+                e.detail.headers['X-CSRF-Token'] = token;
+            }
+        });
+    </script>
+</head>
+<body class="h-full" hx-boost="true">
+    {{if .User}}
+    <div class="min-h-full flex">
+        {{template "partials/nav.html" .}}
+        <main class="flex-1 p-6 lg:p-8">
+            {{range .Flashes}}
+            <div class="mb-4 rounded-lg border px-4 py-3 text-sm
+                {{if eq .Type "success"}}border-emerald-200 bg-emerald-50 text-emerald-800{{end}}
+                {{if eq .Type "error"}}border-red-200 bg-red-50 text-red-800{{end}}
+                {{if eq .Type "info"}}border-blue-200 bg-blue-50 text-blue-800{{end}}
+                {{if eq .Type "warning"}}border-amber-200 bg-amber-50 text-amber-800{{end}}
+            ">{{.Message}}</div>
+            {{end}}
+            {{.Content}}
+        </main>
+    </div>
+    {{else}}
+    <main class="min-h-full flex items-center justify-center p-4">
+        {{.Content}}
+    </main>
+    {{end}}
+</body>
+</html>{{end}}

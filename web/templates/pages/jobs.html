@@ -1,0 +1,75 @@
+{{define "pages/jobs.html"}}
+<div>
+    <h1 class="text-2xl font-bold text-gray-900">Background Jobs</h1>
+    <p class="mt-1 text-sm text-gray-500">TimescaleDB background worker jobs and their status</p>
+
+    <div class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Procedure</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Hypertable</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Schedule</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Last Run</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Runs</th>
+                        <th class="px-4 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {{range .Jobs}}
+                    <tr class="hover:bg-gray-50">
+                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{{.JobID}}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.ProcName}}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            {{if .HypertableName}}{{.HypertableSchema}}.{{.HypertableName}}{{else}}—{{end}}
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.ScheduleInterval}}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                            {{if not .LastRunStartedAt.IsZero}}{{timeAgo .LastRunStartedAt}}{{else}}Never{{end}}
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm">
+                            {{if eq .LastRunStatus "Success"}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Success</span>
+                            {{else if eq .LastRunStatus "Failed"}}<span class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Failed</span>
+                            {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{{if .LastRunStatus}}{{.LastRunStatus}}{{else}}—{{end}}</span>{{end}}
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            <span class="text-emerald-600">{{.TotalSuccesses}}</span> / <span class="text-red-600">{{.TotalFailures}}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                            <div class="flex gap-1 justify-end">
+                                {{if .Scheduled}}
+                                <form method="POST" action="/jobs/action" class="inline">
+                                    <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="job_id" value="{{.JobID}}">
+                                    <input type="hidden" name="action" value="pause">
+                                    <button type="submit" class="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200">Pause</button>
+                                </form>
+                                {{else}}
+                                <form method="POST" action="/jobs/action" class="inline">
+                                    <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="job_id" value="{{.JobID}}">
+                                    <input type="hidden" name="action" value="resume">
+                                    <button type="submit" class="rounded bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">Resume</button>
+                                </form>
+                                {{end}}
+                                <form method="POST" action="/jobs/action" class="inline">
+                                    <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="job_id" value="{{.JobID}}">
+                                    <input type="hidden" name="action" value="run_now">
+                                    <button type="submit" class="rounded bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-100">Run Now</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500">No jobs found</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{end}}

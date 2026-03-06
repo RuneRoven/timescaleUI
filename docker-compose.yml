@@ -1,0 +1,44 @@
+services:
+  tsui:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TSUI_LISTEN_ADDR: ":8080"
+      TSUI_DATA_DIR: "/data"
+      TSUI_READ_ONLY: "false"
+    volumes:
+      - tsui-data:/data
+    networks:
+      - tsui-internal
+      - frontend
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - tsdb-data:/home/postgres/pgdata/data
+    networks:
+      - tsui-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  tsui-data:
+  tsdb-data:
+
+networks:
+  tsui-internal:
+    internal: true   # No external internet access
+  frontend:
+    driver: bridge   # Only tsui exposed here

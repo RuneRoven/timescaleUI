@@ -1,0 +1,71 @@
+{{define "pages/retention.html"}}
+<div>
+    <h1 class="text-2xl font-bold text-gray-900">Retention Policies</h1>
+    <p class="mt-1 text-sm text-gray-500">Automatically drop old data from hypertables</p>
+
+    <!-- Existing Policies -->
+    <div class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Hypertable</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Drop After</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Schedule</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Active</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {{range .Policies}}
+                <tr class="hover:bg-gray-50">
+                    <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{{.Schema}}.{{.Table}}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.DropAfter}}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{{.Schedule}}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm">
+                        {{if .Scheduled}}<span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Yes</span>
+                        {{else}}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">No</span>{{end}}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                        <form method="POST" action="/retention/delete" class="inline" onsubmit="return confirm('Remove retention policy?')">
+                            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="schema" value="{{.Schema}}">
+                            <input type="hidden" name="table" value="{{.Table}}">
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No retention policies found</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Policy -->
+    <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Add Retention Policy</h2>
+        <form method="POST" action="/retention/create" class="flex flex-wrap items-end gap-4">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{.CSRFToken}}">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Hypertable</label>
+                <select name="hypertable" required
+                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border"
+                        onchange="var parts = this.value.split('.'); document.getElementById('ret-schema').value = parts[0]; document.getElementById('ret-table').value = parts[1];">
+                    <option value="">Select...</option>
+                    {{range .Hypertables}}
+                    <option value="{{.Schema}}.{{.Name}}">{{.Schema}}.{{.Name}}</option>
+                    {{end}}
+                </select>
+                <input type="hidden" id="ret-schema" name="schema">
+                <input type="hidden" id="ret-table" name="table">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Drop After</label>
+                <input type="text" name="drop_after" placeholder="30 days" required
+                       class="mt-1 block rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border">
+            </div>
+            <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors">Add Policy</button>
+        </form>
+    </div>
+</div>
+{{end}}

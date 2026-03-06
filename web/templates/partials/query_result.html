@@ -1,0 +1,38 @@
+{{define "partials/query_result.html"}}
+{{if .Error}}
+<div class="rounded-lg border border-red-200 bg-red-50 p-4">
+    <p class="text-sm font-medium text-red-800">Error</p>
+    <pre class="mt-1 text-sm text-red-700 whitespace-pre-wrap font-mono">{{.Error}}</pre>
+</div>
+{{else}}
+<div class="rounded-lg border border-gray-200 bg-white">
+    <div class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <span class="text-sm text-gray-600">{{.RowCount}} rows in {{.Duration}}</span>
+    </div>
+    {{if .Columns}}
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    {{range .Columns}}
+                    <th class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">{{.}}</th>
+                    {{end}}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {{range .Rows}}
+                <tr class="hover:bg-gray-50">
+                    {{range .}}
+                    <td class="whitespace-nowrap px-4 py-2 text-sm text-gray-600 font-mono">{{.}}</td>
+                    {{end}}
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <p class="px-4 py-6 text-sm text-gray-500 text-center">Query executed successfully (no rows returned)</p>
+    {{end}}
+</div>
+{{end}}
+{{end}}
