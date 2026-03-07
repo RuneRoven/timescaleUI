@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -12,10 +13,46 @@ import (
 
 var identifierRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
+// intervalRegex allows PostgreSQL interval literals like "7 days", "1 month", "2.5 hours", "00:30:00".
+var intervalRegex = regexp.MustCompile(`^[a-zA-Z0-9 .:]+$`)
+
 // ValidateIdentifier checks that a string is a safe SQL identifier.
 func ValidateIdentifier(name string) error {
 	if !identifierRegex.MatchString(name) {
 		return fmt.Errorf("invalid identifier: %q", name)
+	}
+	return nil
+}
+
+// ValidateInterval checks that a string is a safe PostgreSQL interval literal.
+func ValidateInterval(interval string) error {
+	if interval == "" {
+		return fmt.Errorf("interval cannot be empty")
+	}
+	if !intervalRegex.MatchString(interval) {
+		return fmt.Errorf("invalid interval: %q", interval)
+	}
+	return nil
+}
+
+// ValidateColumnList checks that a comma-separated column list contains only valid identifiers
+// with optional ASC/DESC suffixes (e.g. "col1, col2 DESC, col3 ASC").
+func ValidateColumnList(cols string) error {
+	if cols == "" {
+		return nil
+	}
+	for _, part := range strings.Split(cols, ",") {
+		token := strings.TrimSpace(part)
+		// Strip optional ASC/DESC suffix
+		upper := strings.ToUpper(token)
+		if strings.HasSuffix(upper, " ASC") {
+			token = strings.TrimSpace(token[:len(token)-4])
+		} else if strings.HasSuffix(upper, " DESC") {
+			token = strings.TrimSpace(token[:len(token)-5])
+		}
+		if err := ValidateIdentifier(token); err != nil {
+			return fmt.Errorf("invalid column in list: %w", err)
+		}
 	}
 	return nil
 }
@@ -249,6 +286,9 @@ func SetChunkTimeInterval(ctx context.Context, pool *pgxpool.Pool, schema, table
 	if err := ValidateIdentifier(table); err != nil {
 		return err
 	}
+	if err := ValidateInterval(interval); err != nil {
+		return err
+	}
 
 	ht := pgx.Identifier{schema, table}.Sanitize()
 	sql := fmt.Sprintf("SELECT set_chunk_time_interval(%s, INTERVAL '%s')", ht, interval)
@@ -354,6 +394,9 @@ func CreateHypertable(ctx context.Context, pool *pgxpool.Pool, schema, table, ti
 
 	query := fmt.Sprintf(`SELECT create_hypertable(%s, %s`, ht, col)
 	if chunkInterval != "" {
+		if err := ValidateInterval(chunkInterval); err != nil {
+			return err
+		}
 		query += fmt.Sprintf(`, chunk_time_interval => INTERVAL '%s'`, chunkInterval)
 	}
 	query += `, if_not_exists => TRUE, migrate_data => TRUE)`

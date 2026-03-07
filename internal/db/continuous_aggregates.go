@@ -111,7 +111,7 @@ func ListContinuousAggregates(ctx context.Context, pool *pgxpool.Pool) ([]Contin
 
 // CreateContinuousAggregate creates a new continuous aggregate.
 func CreateContinuousAggregate(ctx context.Context, pool *pgxpool.Pool, name, query string, materializedOnly bool) error {
-	if err := ValidateIdentifier(name); err != nil {
+	if err := validateQualifiedName(name); err != nil {
 		return err
 	}
 
@@ -132,7 +132,7 @@ func CreateContinuousAggregate(ctx context.Context, pool *pgxpool.Pool, name, qu
 
 // RefreshContinuousAggregate refreshes a continuous aggregate over a time range.
 func RefreshContinuousAggregate(ctx context.Context, pool *pgxpool.Pool, name, start, end string) error {
-	if err := ValidateIdentifier(name); err != nil {
+	if err := validateQualifiedName(name); err != nil {
 		return err
 	}
 	sql := fmt.Sprintf("CALL refresh_continuous_aggregate('%s', %s, %s)", name, start, end)
@@ -232,6 +232,12 @@ func AddRefreshPolicy(ctx context.Context, pool *pgxpool.Pool, schema, name, sta
 		return err
 	}
 
+	for _, iv := range []string{startOffset, endOffset, scheduleInterval} {
+		if err := ValidateInterval(iv); err != nil {
+			return err
+		}
+	}
+
 	sql := fmt.Sprintf(`SELECT add_continuous_aggregate_policy('%s.%s',
 		start_offset => INTERVAL '%s',
 		end_offset => INTERVAL '%s',
@@ -294,7 +300,7 @@ func RecreateContinuousAggregate(ctx context.Context, pool *pgxpool.Pool, schema
 
 // DropContinuousAggregate drops a continuous aggregate.
 func DropContinuousAggregate(ctx context.Context, pool *pgxpool.Pool, name string) error {
-	if err := ValidateIdentifier(name); err != nil {
+	if err := validateQualifiedName(name); err != nil {
 		return err
 	}
 	sql := fmt.Sprintf("DROP MATERIALIZED VIEW %s CASCADE", name)

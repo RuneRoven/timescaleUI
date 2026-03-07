@@ -69,6 +69,17 @@ func EnableCompression(ctx context.Context, pool *pgxpool.Pool, schema, table, s
 		return err
 	}
 
+	if segmentBy != "" {
+		if err := ValidateColumnList(segmentBy); err != nil {
+			return fmt.Errorf("invalid segmentby: %w", err)
+		}
+	}
+	if orderBy != "" {
+		if err := ValidateColumnList(orderBy); err != nil {
+			return fmt.Errorf("invalid orderby: %w", err)
+		}
+	}
+
 	ht := pgx.Identifier{schema, table}.Sanitize()
 	sql := fmt.Sprintf("ALTER TABLE %s SET (timescaledb.compress", ht)
 	if segmentBy != "" {
@@ -253,6 +264,10 @@ func AddCompressionPolicy(ctx context.Context, pool *pgxpool.Pool, schema, table
 		return err
 	}
 	if err := ValidateIdentifier(table); err != nil {
+		return err
+	}
+
+	if err := ValidateInterval(compressAfter); err != nil {
 		return err
 	}
 

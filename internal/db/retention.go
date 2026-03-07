@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -53,8 +52,11 @@ func AddRetentionPolicy(ctx context.Context, pool *pgxpool.Pool, schema, table, 
 		return err
 	}
 
-	ht := pgx.Identifier{schema, table}.Sanitize()
-	sql := fmt.Sprintf("SELECT add_retention_policy(%s, INTERVAL '%s', if_not_exists => true)", ht, dropAfter)
+	if err := ValidateInterval(dropAfter); err != nil {
+		return err
+	}
+
+	sql := fmt.Sprintf("SELECT add_retention_policy('%s.%s', INTERVAL '%s', if_not_exists => true)", schema, table, dropAfter)
 	if _, err := pool.Exec(ctx, sql); err != nil {
 		return fmt.Errorf("add retention policy: %w", err)
 	}
@@ -70,8 +72,7 @@ func RemoveRetentionPolicy(ctx context.Context, pool *pgxpool.Pool, schema, tabl
 		return err
 	}
 
-	ht := pgx.Identifier{schema, table}.Sanitize()
-	sql := fmt.Sprintf("SELECT remove_retention_policy(%s, if_exists => true)", ht)
+	sql := fmt.Sprintf("SELECT remove_retention_policy('%s.%s', if_exists => true)", schema, table)
 	if _, err := pool.Exec(ctx, sql); err != nil {
 		return fmt.Errorf("remove retention policy: %w", err)
 	}
