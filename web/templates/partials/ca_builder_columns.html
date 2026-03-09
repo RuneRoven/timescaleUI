@@ -20,16 +20,16 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bucket Interval</label>
+            <div class="mt-1 flex flex-wrap gap-1">
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 minute'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1m</button>
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='5 minutes'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">5m</button>
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 hour'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1h</button>
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 week'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1w</button>
+                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 month'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1mo</button>
+            </div>
             <input type="text" name="bucket" value="1 hour" required
                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-            <div class="mt-2 flex flex-wrap gap-1">
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 minute'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 min</button>
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='5 minutes'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">5 min</button>
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 hour'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 hour</button>
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 day'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 day</button>
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 week'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 week</button>
-                <button type="button" onclick="document.querySelector('[name=bucket]').value='1 month'" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 month</button>
-            </div>
         </div>
     </div>
 </div>

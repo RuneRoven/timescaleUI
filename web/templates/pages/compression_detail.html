@@ -54,24 +54,40 @@
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Compress After</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.Detail.PolicyInterval}}</dd></div>
             </dl>
-            <form method="POST" action="/compression/update-policy" class="mt-4 flex gap-2">
+            <form method="POST" action="/compression/update-policy" class="mt-4">
                 <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
                 <input type="hidden" name="schema" value="{{.Content.Detail.Schema}}">
                 <input type="hidden" name="table" value="{{.Content.Detail.Table}}">
-                <input type="text" name="compress_after" value="{{.Content.Detail.PolicyInterval}}" placeholder="7 days"
-                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+                <div class="flex flex-wrap gap-1 mb-1.5">
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='7 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='30 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='90 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">90d</button>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" name="compress_after" value="{{.Content.Detail.PolicyInterval}}" placeholder="7 days"
+                           class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+                </div>
             </form>
             {{else}}
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No compression policy configured.</p>
             {{if .Content.Detail.Enabled}}
-            <form method="POST" action="/compression/update-policy" class="flex gap-2">
+            <form method="POST" action="/compression/update-policy">
                 <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
                 <input type="hidden" name="schema" value="{{.Content.Detail.Schema}}">
                 <input type="hidden" name="table" value="{{.Content.Detail.Table}}">
-                <input type="text" name="compress_after" required placeholder="7 days"
-                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Add Policy</button>
+                <div class="flex flex-wrap gap-1 mb-1.5">
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='7 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='30 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=compress_after]').value='90 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">90d</button>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" name="compress_after" required placeholder="7 days"
+                           class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Add Policy</button>
+                </div>
             </form>
             {{end}}
             {{end}}

@@ -17,13 +17,21 @@
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Column</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.TimeDimension}}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Chunk Interval</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{.Content.ChunkInterval}}</dd></div>
             </dl>
-            <form method="POST" action="/hypertables/update-chunk-interval" class="mt-4 flex gap-2">
+            <form method="POST" action="/hypertables/update-chunk-interval" class="mt-4">
                 <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
                 <input type="hidden" name="schema" value="{{.Content.Schema}}">
                 <input type="hidden" name="table" value="{{.Content.Name}}">
-                <input type="text" name="chunk_interval" value="{{.Content.ChunkInterval}}" placeholder="7 days"
-                       class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+                <div class="flex flex-wrap gap-1 mb-1.5">
+                    <button type="button" onclick="this.closest('form').querySelector('[name=chunk_interval]').value='1 hour'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1h</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=chunk_interval]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=chunk_interval]').value='7 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7d</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=chunk_interval]').value='1 month'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1mo</button>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" name="chunk_interval" value="{{.Content.ChunkInterval}}" placeholder="7 days"
+                           class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    <button type="submit" class="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500">Update</button>
+                </div>
             </form>
         </div>
 

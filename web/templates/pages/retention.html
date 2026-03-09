@@ -61,8 +61,14 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Drop After</label>
+                <div class="mt-1 flex flex-wrap gap-1.5">
+                    <button type="button" onclick="this.closest('form').querySelector('[name=drop_after]').value='7 days'" class="rounded-md border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 days</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=drop_after]').value='30 days'" class="rounded-md border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 days</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=drop_after]').value='90 days'" class="rounded-md border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">90 days</button>
+                    <button type="button" onclick="this.closest('form').querySelector('[name=drop_after]').value='1 year'" class="rounded-md border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1 year</button>
+                </div>
                 <input type="text" name="drop_after" placeholder="30 days" required
-                       class="mt-1 block rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
+                       class="mt-1.5 block rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400">
             </div>
             <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors">Add Policy</button>
         </form>

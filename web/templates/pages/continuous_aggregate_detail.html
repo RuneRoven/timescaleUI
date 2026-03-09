@@ -68,16 +68,31 @@
                 <input type="hidden" name="name" value="{{.Content.CA.Name}}">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Start Offset</label>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        <button type="button" onclick="this.closest('form').querySelector('[name=start_offset]').value='7 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7d</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=start_offset]').value='30 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30d</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=start_offset]').value='90 days'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">90d</button>
+                    </div>
                     <input type="text" name="start_offset" required placeholder="30 days"
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">End Offset</label>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        <button type="button" onclick="this.closest('form').querySelector('[name=end_offset]').value='1 minute'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1m</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=end_offset]').value='1 hour'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1h</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=end_offset]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                    </div>
                     <input type="text" name="end_offset" required placeholder="1 hour"
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Schedule Interval</label>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        <button type="button" onclick="this.closest('form').querySelector('[name=schedule_interval]').value='30 minutes'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30m</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=schedule_interval]').value='1 hour'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1h</button>
+                        <button type="button" onclick="this.closest('form').querySelector('[name=schedule_interval]').value='1 day'" class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">1d</button>
+                    </div>
                     <input type="text" name="schedule_interval" required placeholder="1 hour"
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 </div>
