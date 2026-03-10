@@ -14,41 +14,50 @@
         </div>
     </div>
 
-    <!-- Definition -->
+    <!-- Definition (inline edit) -->
     <div class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
         <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">SQL Definition</h2>
-        <pre class="overflow-auto rounded-lg bg-gray-50 p-4 text-sm font-mono text-gray-800 dark:bg-gray-900 dark:text-gray-300 max-h-96">{{.Content.View.Definition}}</pre>
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <form id="view-edit-form" method="POST" action="/functions/update-view-definition"
+              {{if .Content.View.IsMatView}}onsubmit="return confirm('This will drop and recreate the materialized view. Continue?')"{{end}}>
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="schema" value="{{.Content.View.Schema}}">
+            <input type="hidden" name="name" value="{{.Content.View.Name}}">
+            <input type="hidden" name="materialized" value="{{if .Content.View.IsMatView}}true{{else}}false{{end}}">
+            <textarea id="view-def-editor" name="query" rows="12" required data-editor="sql" data-readonly
+                      class="block w-full text-sm font-mono">{{.Content.View.Definition}}</textarea>
+            <div id="view-edit-controls" class="hidden mt-3 space-y-3">
+                {{if .Content.View.IsMatView}}<p class="text-xs text-amber-600 dark:text-amber-400">This will drop and recreate the materialized view with new data.</p>{{end}}
+                <div class="flex gap-3">
+                    <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">Save</button>
+                    <button type="button" id="view-edit-cancel"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                </div>
+            </div>
+        </form>
+        <div id="view-edit-trigger" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             {{if .Content.View.IsMatView}}<p class="text-xs text-amber-600 dark:text-amber-400 mb-3">Editing a materialized view will drop and recreate it. Data will be repopulated.</p>{{end}}
-            <button onclick="document.getElementById('edit-view-modal').classList.remove('hidden')"
+            <button type="button" id="view-edit-btn"
                     class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Edit Definition</button>
         </div>
     </div>
-
-    <!-- Edit Definition Modal -->
-    <div id="edit-view-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
-            <h2 class="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">Edit View Definition</h2>
-            {{if .Content.View.IsMatView}}<p class="text-sm text-amber-600 dark:text-amber-400 mb-4">This will drop and recreate the materialized view with new data.</p>{{end}}
-            <form method="POST" action="/functions/update-view-definition" class="space-y-4"
-                  {{if .Content.View.IsMatView}}onsubmit="return confirm('This will drop and recreate the materialized view. Continue?')"{{end}}>
-                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
-                <input type="hidden" name="schema" value="{{.Content.View.Schema}}">
-                <input type="hidden" name="name" value="{{.Content.View.Name}}">
-                <input type="hidden" name="materialized" value="{{if .Content.View.IsMatView}}true{{else}}false{{end}}">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Query</label>
-                    <textarea name="query" rows="12" required
-                              class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{.Content.View.Definition}}</textarea>
-                </div>
-                <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="document.getElementById('edit-view-modal').classList.add('hidden')"
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <script>
+    (function() {
+        var textarea = document.getElementById('view-def-editor');
+        var controls = document.getElementById('view-edit-controls');
+        var trigger = document.getElementById('view-edit-trigger');
+        var originalValue = textarea.value;
+        document.getElementById('view-edit-btn').addEventListener('click', function() {
+            cmEnableEditing(textarea);
+            controls.classList.remove('hidden');
+            trigger.classList.add('hidden');
+        });
+        document.getElementById('view-edit-cancel').addEventListener('click', function() {
+            cmDisableEditing(textarea, originalValue);
+            controls.classList.add('hidden');
+            trigger.classList.remove('hidden');
+        });
+    })();
+    </script>
 
     <!-- Dependencies -->
     {{if .Content.View.Dependencies}}

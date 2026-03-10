@@ -102,43 +102,52 @@
         </div>
     </div>
 
-    <!-- View Definition -->
+    <!-- View Definition (inline edit) -->
     <div class="mt-6 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
         <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 dark:text-gray-100">View Definition</h2>
-        <pre class="overflow-auto rounded-lg bg-gray-50 p-4 text-sm font-mono text-gray-800 dark:bg-gray-900 dark:text-gray-300">{{.Content.CA.ViewDefinition}}</pre>
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-amber-600 dark:text-amber-400 mb-3">Editing the definition will drop and recreate the continuous aggregate. All materialized data will be lost.</p>
-            <button onclick="document.getElementById('edit-definition-modal').classList.remove('hidden')"
-                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Edit Definition</button>
-        </div>
-    </div>
-
-    <!-- Edit Definition Modal -->
-    <div id="edit-definition-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
-            <h2 class="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">Edit Continuous Aggregate Definition</h2>
-            <p class="text-sm text-amber-600 dark:text-amber-400 mb-4">This will drop and recreate the continuous aggregate. All materialized data will need to be refreshed.</p>
-            <form method="POST" action="/continuous-aggregates/update-definition" class="space-y-4" onsubmit="return confirm('This will drop and recreate the continuous aggregate. Continue?')">
-                <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
-                <input type="hidden" name="schema" value="{{.Content.CA.Schema}}">
-                <input type="hidden" name="name" value="{{.Content.CA.Name}}">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Query</label>
-                    <textarea name="query" rows="10" required
-                              class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{.Content.CA.ViewDefinition}}</textarea>
-                </div>
+        <form id="ca-edit-form" method="POST" action="/continuous-aggregates/update-definition" onsubmit="return confirm('This will drop and recreate the continuous aggregate. Continue?')">
+            <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="schema" value="{{.Content.CA.Schema}}">
+            <input type="hidden" name="name" value="{{.Content.CA.Name}}">
+            <textarea id="ca-def-editor" name="query" rows="10" required data-editor="sql" data-readonly
+                      class="block w-full text-sm font-mono">{{.Content.CA.ViewDefinition}}</textarea>
+            <div id="ca-edit-controls" class="hidden mt-3 space-y-3">
+                <p class="text-xs text-amber-600 dark:text-amber-400">This will drop and recreate the continuous aggregate. All materialized data will need to be refreshed.</p>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" id="edit-materialized-only" name="materialized_only" {{if .Content.CA.MaterializedOnly}}checked{{end}}
                            class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600">
                     <label for="edit-materialized-only" class="text-sm text-gray-700 dark:text-gray-300">Materialized only (no real-time aggregation)</label>
                 </div>
-                <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="document.getElementById('edit-definition-modal').classList.add('hidden')"
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                <div class="flex gap-3">
                     <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">Recreate</button>
+                    <button type="button" id="ca-edit-cancel"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
                 </div>
-            </form>
+            </div>
+        </form>
+        <div id="ca-edit-trigger" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-amber-600 dark:text-amber-400 mb-3">Editing the definition will drop and recreate the continuous aggregate. All materialized data will be lost.</p>
+            <button type="button" id="ca-edit-btn"
+                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">Edit Definition</button>
         </div>
     </div>
+    <script>
+    (function() {
+        var textarea = document.getElementById('ca-def-editor');
+        var controls = document.getElementById('ca-edit-controls');
+        var trigger = document.getElementById('ca-edit-trigger');
+        var originalValue = textarea.value;
+        document.getElementById('ca-edit-btn').addEventListener('click', function() {
+            cmEnableEditing(textarea);
+            controls.classList.remove('hidden');
+            trigger.classList.add('hidden');
+        });
+        document.getElementById('ca-edit-cancel').addEventListener('click', function() {
+            cmDisableEditing(textarea, originalValue);
+            controls.classList.add('hidden');
+            trigger.classList.remove('hidden');
+        });
+    })();
+    </script>
 </div>
 {{end}}

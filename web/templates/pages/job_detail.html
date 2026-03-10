@@ -68,7 +68,7 @@
         <form method="POST" action="/jobs/update-config" class="space-y-3">
             <input type="hidden" name="gorilla.csrf.Token" value="{{$.CSRFToken}}">
             <input type="hidden" name="job_id" value="{{.Content.Job.JobID}}">
-            <textarea name="config" rows="4" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{.Content.Job.Config}}</textarea>
+            <textarea name="config" rows="4" data-editor="json" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">{{.Content.Job.Config}}</textarea>
             <button type="submit" class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-500">Update Config</button>
         </form>
     </div>

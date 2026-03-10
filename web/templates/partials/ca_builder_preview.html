@@ -16,7 +16,7 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Generated SQL</label>
         <textarea id="ca-query-textarea" name="query" rows="8"
                   class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-sm px-3 py-2 border font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                  spellcheck="false">{{.Query}}</textarea>
+                  spellcheck="false" data-editor="sql">{{.Query}}</textarea>
     </div>
 
     <div class="mt-3 flex items-center gap-2">
@@ -60,6 +60,14 @@
             var hidden = document.getElementById('ca-create-query');
             if (textarea && hidden) {
                 hidden.value = textarea.value;
+                // Sync from CodeMirror if initialized, otherwise fall back to input event
+                var poll = setInterval(function() {
+                    if (textarea._cmEditor) {
+                        clearInterval(poll);
+                        textarea._cmEditor.on('change', function(cm) { hidden.value = cm.getValue(); });
+                    }
+                }, 50);
+                setTimeout(function() { clearInterval(poll); }, 3000);
                 textarea.addEventListener('input', function() { hidden.value = textarea.value; });
             }
         })();

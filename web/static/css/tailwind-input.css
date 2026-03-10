@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CodeMirror overrides */
+.CodeMirror { border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; height: auto; min-height: 6rem; }
+.CodeMirror-focused { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
+.dark .CodeMirror { border-color: #4b5563; }
+.dark .CodeMirror-focused { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
+
+/* Line number gutter */
+.CodeMirror-gutters { background: #f9fafb; border-right: 1px solid #e5e7eb; }
+.dark .CodeMirror-gutters { background: #1f2937; border-right-color: #374151; }
+.CodeMirror-linenumber { color: #9ca3af; padding: 0 8px 0 4px; }
+.dark .CodeMirror-linenumber { color: #6b7280; }
+
+/* Readonly view */
+.cm-readonly { min-height: 0; cursor: default; }
+.cm-readonly .CodeMirror-scroll { cursor: default; }
