@@ -1,0 +1,104 @@
+# CI/CD: Build multi-arch Docker image and push to DockerHub on merge to main
+#
+# Prerequisites (one-time setup):
+#   Go to GitHub repo → Settings → Secrets and variables → Actions → New repository secret
+#   - DOCKERHUB_USERNAME: dh2k
+#   - DOCKERHUB_TOKEN: DockerHub access token (created at https://hub.docker.com/settings/security)
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to push git tags
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for tag/commit analysis
+
+      - name: Determine next version
+        id: version
+        run: |
+          # Find latest semver tag (default v0.0.0)
+          LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+            COMMIT_RANGE="HEAD"
+          else
+            COMMIT_RANGE="${LATEST_TAG}..HEAD"
+          fi
+
+          echo "Latest tag: $LATEST_TAG"
+
+          # Parse current version
+          VERSION="${LATEST_TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+          # Analyze commits since last tag
+          BUMP="patch"
+          while IFS= read -r line; do
+            # Check for breaking changes
+            if echo "$line" | grep -qiE '(BREAKING CHANGE|^[a-z]+(\(.*\))?!:)'; then
+              BUMP="major"
+              break
+            fi
+            # Check for features
+            if echo "$line" | grep -qE '^feat(\(.*\))?:'; then
+              BUMP="minor"
+            fi
+          done < <(git log "$COMMIT_RANGE" --format="%s%n%b" 2>/dev/null)
+
+          # Apply bump
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          echo "Bump type: $BUMP"
+          echo "New version: $NEW_VERSION"
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            dh2k/timescaleui:${{ steps.version.outputs.version }}
+            dh2k/timescaleui:latest
+            dh2k/timescaleui:sha-${{ steps.version.outputs.short_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create git tag
+        run: |
+          git tag "${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
